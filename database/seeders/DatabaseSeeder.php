@@ -28,5 +28,10 @@ class DatabaseSeeder extends Seeder
 
         // 3. Asignarle el rol de SuperAdmin
         $admin->assignRole($roleAdmin);
+        // Llama a los seeders de catálogo y recintos
+$this->call([
+    CategorySeeder::class,
+    VenueSeeder::class,
+]);
     }
 }
