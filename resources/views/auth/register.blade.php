@@ -1,3 +1,4 @@
+//HOLA MUNDO
 <x-guest-layout>
     <form method="POST" action="{{ route('register') }}">
         @csrf
@@ -14,6 +15,20 @@
             <x-input-label for="email" :value="__('Email')" />
             <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
+        </div>
+
+         <!-- Document_id -->
+        <div class="mt-4">
+            <x-input-label for="document_id" :value="__('Cédula')" />
+            <x-text-input id="document_id" class="block mt-1 w-full" type="text" name="document_id" :value="old('document_id')" required />
+            <x-input-error :messages="$errors->get('document_id')" class="mt-2" />
+        </div>
+
+         <!-- Phone -->
+        <div class="mt-4">
+            <x-input-label for="phone" :value="__('Teléfono')" />
+            <x-text-input id="phone" class="block mt-1 w-full" type="text" name="phone" :value="old('phone')" required />
+            <x-input-error :messages="$errors->get('phone')" class="mt-2" />
         </div>
 
         <!-- Password -->
