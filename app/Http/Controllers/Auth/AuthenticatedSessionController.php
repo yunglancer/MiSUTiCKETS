@@ -28,7 +28,14 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // Redirección inteligente dependiendo del rol en MiSUTiCKETS
+        if ($request->user()->hasRole(['SuperAdmin', 'Organizador'])) {
+            // Si es administrador, va al panel
+            return redirect()->intended(route('admin.dashboard', absolute: false));
+        }
+
+        // Si es un cliente normal, va a la Landing Page
+        return redirect()->intended(route('home', absolute: false));
     }
 
     /**
