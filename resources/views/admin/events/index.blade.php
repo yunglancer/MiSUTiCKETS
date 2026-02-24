@@ -50,9 +50,11 @@
                     </td>
                     
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-3">Editar</a>
-                        <form action="#" method="POST" class="inline">
-                            @csrf @method('DELETE')
+                        <a href="{{ route('admin.events.edit', $event->id) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Editar</a>
+
+                        <form action="{{ route('admin.events.destroy', $event->id) }}" method="POST" class="inline" onsubmit="return confirm('¿Estás seguro de eliminar este evento?')">
+                            @csrf 
+                            @method('DELETE')
                             <button type="submit" class="text-red-600 hover:text-red-900">Borrar</button>
                         </form>
                     </td>

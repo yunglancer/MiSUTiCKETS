@@ -60,4 +60,51 @@ class EventController extends Controller
 
         return redirect()->route('admin.events.index')->with('success', '¡Evento creado con éxito!');
     }
+
+        public function edit(Event $event)
+    {
+        $categories = Category::all();
+        $venues = Venue::all();
+        return view('admin.events.edit', compact('event', 'categories', 'venues'));
+    }
+
+    public function update(Request $request, Event $event)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'venue_id' => 'required|exists:venues,id',
+            'event_date' => 'required|date',
+            'status' => 'required|in:Draft,Published,Cancelled',
+            'image' => 'nullable|image|max:2048',
+        ]);
+
+        $data = $request->all();
+        $data['slug'] = Str::slug($request->title) . '-' . $event->id;
+        $data['is_featured'] = $request->has('is_featured');
+
+        if ($request->hasFile('image')) {
+            // Borrar imagen antigua si existe
+            if ($event->image_path) {
+                Storage::disk('public')->delete($event->image_path);
+            }
+            $data['image_path'] = $request->file('image')->store('events', 'public');
+        }
+
+        $event->update($data);
+
+        return redirect()->route('admin.events.index')->with('success', '¡Evento actualizado!');
+    }
+
+    public function destroy(Event $event)
+    {
+        // Borrar la imagen del disco antes de eliminar el registro
+        if ($event->image_path) {
+            Storage::disk('public')->delete($event->image_path);
+        }
+
+        $event->delete();
+
+        return redirect()->route('admin.events.index')->with('success', 'Evento eliminado correctamente.');
+    }
 }
