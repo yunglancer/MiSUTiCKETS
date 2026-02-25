@@ -53,40 +53,7 @@
 </head>
 
 <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased font-display">
-    <header class="sticky top-0 z-50 w-full bg-white/95 dark:bg-background-dark/95 backdrop-blur-md border-b border-slate-100">
-        <div class="container mx-auto px-4 h-20 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
-                    <span class="material-icons">confirmation_number</span>
-                </div>
-                <span class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Misu<span class="text-primary">Ticket</span></span>
-            </div>
-            <nav class="hidden md:flex items-center space-x-8">
-                <a class="text-sm font-semibold hover:text-primary transition-colors text-slate-700" href="#">Deportes</a>
-                <a class="text-sm font-semibold hover:text-primary transition-colors text-slate-700" href="#">Conciertos</a>
-                <a class="text-sm font-semibold hover:text-primary transition-colors text-slate-700" href="#">Teatro</a>
-                <a class="text-sm font-semibold hover:text-primary transition-colors text-slate-700" href="#">Festivales</a>
-            </nav>
-            <div class="flex items-center gap-4">
-                <div class="relative hidden lg:block">
-                    <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
-                    <input class="w-64 pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary transition-all" placeholder="Buscar eventos..." type="text" />
-                </div>
-                <button class="flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg transition-all border border-slate-200 dark:border-slate-700">
-                    <span class="material-icons text-primary text-xl">light_mode</span>
-                    <span class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Tema</span>
-                </button>
-                <div class="h-6 w-[1px] bg-slate-200 mx-1"></div>
-                <a href="{{ route('register') }}" class="flex items-center gap-2 px-6 py-2.5 border-2 border-primary text-primary font-bold rounded-full hover:bg-primary hover:text-white transition-all active:scale-95">
-    <span class="material-icons text-lg">person_add_alt</span>
-    <span class="text-sm">Registrarse</span>
-</a>
-                <a href="{{ route('login') }}" class="flex items-center gap-2 px-6 py-2.5 bg-primary text-white font-bold rounded-full hover:shadow-lg hover:shadow-primary/40 transition-all active:scale-95">
-                    <span class="material-icons text-lg">person_outline</span>
-                    <span class="text-sm">Ingresar</span>
-                </a>
-            </div>
-        </div>
+    <x-navbar />
     </header>
     <main>
         <section class="relative w-full h-[550px] lg:h-[650px] overflow-hidden">
@@ -301,7 +268,7 @@
             </div>
         </section>
     </main>
-    <footer class="bg-white pt-20 pb-10 border-t border-slate-100">
+    <x-footer /> class="bg-white pt-20 pb-10 border-t border-slate-100">
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
                 <div>
