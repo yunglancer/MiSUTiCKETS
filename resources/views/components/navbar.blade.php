@@ -46,7 +46,7 @@
                             {{ Auth::user()->name }}
                         </span>
                     </a>
-                    
+                    <!-- Coment-->
                     <form method="POST" action="{{ route('logout') }}" class="flex items-center ml-2 border-l pl-2 border-slate-300">
                         @csrf
                         <button type="submit" class="text-slate-400 hover:text-red-500 flex items-center">

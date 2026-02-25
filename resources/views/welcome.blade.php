@@ -268,67 +268,7 @@
             </div>
         </section>
     </main>
-    <x-footer /> class="bg-white pt-20 pb-10 border-t border-slate-100">
-        <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-                <div>
-                    <div class="flex items-center gap-2 mb-8">
-                        <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white shadow-md shadow-primary/20">
-                            <span class="material-icons text-sm">confirmation_number</span>
-                        </div>
-                        <span class="text-2xl font-bold tracking-tight text-slate-900">Misu<span class="text-primary">Ticket</span></span>
-                    </div>
-                    <p class="text-slate-500 text-sm leading-relaxed max-w-xs">
-                        La plataforma líder en venta de boletos en Venezuela. Conectamos personas con las mejores experiencias de entretenimiento de forma segura y rápida.
-                    </p>
-                </div>
-                <div>
-                    <h5 class="font-bold text-slate-900 mb-8 uppercase text-xs tracking-[0.2em]">Navegación</h5>
-                    <ul class="space-y-4 text-sm font-medium">
-                        <li><a class="text-slate-600 hover:text-primary transition-colors" href="#">Inicio</a></li>
-                        <li><a class="text-slate-600 hover:text-primary transition-colors" href="#">Eventos 2026</a></li>
-                        <li><a class="text-slate-600 hover:text-primary transition-colors" href="#">Promociones</a></li>
-                        <li><a class="text-slate-600 hover:text-primary transition-colors" href="#">Puntos de venta</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h5 class="font-bold text-slate-900 mb-8 uppercase text-xs tracking-[0.2em]">Soporte</h5>
-                    <ul class="space-y-4 text-sm font-medium">
-                        <li><a class="text-slate-600 hover:text-primary transition-colors" href="#">Centro de Ayuda</a></li>
-                        <li><a class="text-slate-600 hover:text-primary transition-colors" href="#">Términos y Condiciones</a></li>
-                        <li><a class="text-slate-600 hover:text-primary transition-colors" href="#">Políticas de Privacidad</a></li>
-                        <li><a class="text-slate-600 hover:text-primary transition-colors" href="#">Contacto</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h5 class="font-bold text-slate-900 mb-8 uppercase text-xs tracking-[0.2em]">Síguenos</h5>
-                    <div class="flex gap-4">
-                        <a class="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-primary hover:text-white transition-all shadow-sm" href="#">
-                            <span class="material-icons">facebook</span>
-                        </a>
-                        <a class="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-primary hover:text-white transition-all shadow-sm" href="#">
-                            <span class="material-icons text-xl">camera_alt</span>
-                        </a>
-                        <a class="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-primary hover:text-white transition-all shadow-sm" href="#">
-                            <span class="material-icons">alternate_email</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6 text-xs font-semibold text-slate-400 uppercase tracking-widest">
-                <p>© 2026 MisuTicket. Hecho en Venezuela.</p>
-                <div class="flex items-center gap-8">
-                    <div class="flex items-center gap-2">
-                        <span class="material-icons text-lg text-primary">verified_user</span>
-                        Pago Seguro 100%
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="material-icons text-lg text-primary">support_agent</span>
-                        Soporte 24/7
-                    </div>
-                </div>
-            </div>
-        </div>
+    <x-footer />
     </footer>
 
     <script>
