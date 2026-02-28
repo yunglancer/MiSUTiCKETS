@@ -34,8 +34,8 @@ class AuthenticatedSessionController extends Controller
             return redirect()->intended(route('admin.dashboard', absolute: false));
         }
 
-        // Si es un cliente normal, va a la Landing Page
-        return redirect()->intended(route('home', absolute: false));
+// Si es un cliente normal, va a su nuevo panel de usuario
+        return redirect()->intended(route('client.dashboard', absolute: false));
     }
 
     /**

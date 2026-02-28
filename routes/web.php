@@ -23,13 +23,13 @@ Route::middleware(['auth', 'role:SuperAdmin|Organizador'])->prefix('admin')->nam
     
     // El Dashboard principal
     Route::get('/dashboard', function () {
-        return view('dashboard');
+        return view('dashboard'); // Asegúrate de que esta vista exista
     })->name('dashboard');
 
     // CRUD de Eventos (Ángel)
     Route::resource('events', EventController::class);
 
-    // Aquí Ángel colocará sus rutas del CRUD de eventos (Ej: Route::resource('events', EventController::class);)
+    // Aquí Ángel colocará sus rutas del CRUD de eventos adicionales
     // Aquí el Programador Extra colocará las rutas de Venues y Categories.
 
 });
@@ -42,7 +42,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
 
+
+// ==========================================
+// 🎟️ 4. RUTAS DEL CLIENTE (Usuarios normales) -> LUIS
+// ==========================================
+Route::middleware(['auth'])->group(function () {
+    Route::get('/mi-panel', function () {
+        return view('client.dashboard');
+    })->name('client.dashboard');
 });
 
 require __DIR__.'/auth.php';

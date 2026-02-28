@@ -41,6 +41,9 @@
                         <input id="name" name="name" type="text" value="{{ old('name') }}" required autofocus 
                             class="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-[#FF6600]/20 focus:border-[#FF6600] text-black text-sm transition-all outline-none" 
                             placeholder="Ej. Juan Pérez" />
+                        @error('name')
+                            <span class="text-red-500 text-[10px] font-bold mt-1 ml-1 block">{{ $message }}</span>
+                        @enderror
                     </div>
 
                     <div>
@@ -48,20 +51,29 @@
                         <input id="email" name="email" type="email" value="{{ old('email') }}" required 
                             class="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-[#FF6600]/20 focus:border-[#FF6600] text-black text-sm transition-all outline-none" 
                             placeholder="juan@ejemplo.com" />
+                        @error('email')
+                            <span class="text-red-500 text-[10px] font-bold mt-1 ml-1 block">{{ $message }}</span>
+                        @enderror
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[10px] font-black text-gray-800 uppercase tracking-widest mb-2 ml-1">Cédula</label>
-                            <input id="document_id" name="document_id" type="text" required 
+                            <input id="document_id" name="document_id" type="text" value="{{ old('document_id') }}" required 
                                 class="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-[#FF6600]/20 focus:border-[#FF6600] text-black text-sm outline-none" 
                                 placeholder="V-1234567" />
+                            @error('document_id')
+                                <span class="text-red-500 text-[10px] font-bold mt-1 ml-1 block">{{ $message }}</span>
+                            @enderror
                         </div>
                         <div>
                             <label class="block text-[10px] font-black text-gray-800 uppercase tracking-widest mb-2 ml-1">Teléfono</label>
-                            <input id="phone" name="phone" type="text" required 
+                            <input id="phone" name="phone" type="text" value="{{ old('phone') }}" required 
                                 class="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-[#FF6600]/20 focus:border-[#FF6600] text-black text-sm outline-none" 
                                 placeholder="0412 1234567" />
+                            @error('phone')
+                                <span class="text-red-500 text-[10px] font-bold mt-1 ml-1 block">{{ $message }}</span>
+                            @enderror
                         </div>
                     </div>
 
@@ -71,6 +83,9 @@
                             <input id="password" name="password" type="password" required 
                                 class="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-[#FF6600]/20 focus:border-[#FF6600] text-black text-sm outline-none" 
                                 placeholder="••••••••" />
+                            @error('password')
+                                <span class="text-red-500 text-[10px] font-bold mt-1 ml-1 block">{{ $message }}</span>
+                            @enderror
                         </div>
                         <div>
                             <label class="block text-[10px] font-black text-gray-800 uppercase tracking-widest mb-2 ml-1">Confirmar</label>

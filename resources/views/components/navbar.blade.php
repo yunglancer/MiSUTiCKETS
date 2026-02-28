@@ -34,7 +34,8 @@
 
             @auth
                 @php
-                    $dashboardUrl = Auth::user()->hasRole(['SuperAdmin', 'Organizador']) ? route('admin.dashboard') : route('home');
+                    // ¡AQUÍ ESTÁ LA MAGIA CORREGIDA!
+                    $dashboardUrl = Auth::user()->hasRole(['SuperAdmin', 'Organizador']) ? route('admin.dashboard') : route('client.dashboard');
                 @endphp
                 
                 <div class="flex items-center gap-3 bg-slate-100 dark:bg-slate-800 p-1 rounded-full pr-4">
@@ -46,7 +47,6 @@
                             {{ Auth::user()->name }}
                         </span>
                     </a>
-                    <!-- Coment-->
                     <form method="POST" action="{{ route('logout') }}" class="flex items-center ml-2 border-l pl-2 border-slate-300">
                         @csrf
                         <button type="submit" class="text-slate-400 hover:text-red-500 flex items-center">
