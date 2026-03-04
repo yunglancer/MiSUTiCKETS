@@ -47,4 +47,15 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    // Un usuario tiene muchas órdenes de compra
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    // Un usuario tiene muchos tickets
+    public function tickets()
+    {
+        return $this->hasMany(Ticket::class);
+    }
 }

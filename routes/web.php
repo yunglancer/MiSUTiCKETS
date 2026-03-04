@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\ClientController;
 
 // ==========================================
 // 🌍 1. RUTAS FRONT OFFICE (Públicas) -> JEAN
@@ -49,9 +50,8 @@ Route::middleware('auth')->group(function () {
 // 🎟️ 4. RUTAS DEL CLIENTE (Usuarios normales) -> LUIS
 // ==========================================
 Route::middleware(['auth'])->group(function () {
-    Route::get('/mi-panel', function () {
-        return view('client.dashboard');
-    })->name('client.dashboard');
+    // Apuntamos al controlador que acabamos de crear
+    Route::get('/mi-panel', [ClientController::class, 'dashboard'])->name('client.dashboard');
 });
 
 require __DIR__.'/auth.php';

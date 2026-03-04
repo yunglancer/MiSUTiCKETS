@@ -5,37 +5,99 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Admin - MiSUTiCKETS</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+    
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { primary: "#FF6600" },
+                    fontFamily: { display: ["Be Vietnam Pro", "sans-serif"] },
+                }
+            }
+        }
+    </script>
 </head>
 
-<body class="bg-gray-100 font-sans antialiased flex h-screen">
+<body class="bg-slate-50 font-display antialiased flex h-screen overflow-hidden">
 
-    <nav class="w-64 bg-gray-800 text-white flex flex-col flex-shrink-0">
-        <div class="p-4 text-xl font-bold border-b border-gray-700">MiSUTiCKETS</div>
+    <nav class="w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 shadow-2xl z-20">
         
-        <ul class="mt-4 flex-1">
-            <a href="{{ route('home') }}" class="block py-2.5 px-4 rounded transition duration-200 text-green-400 hover:bg-gray-800 hover:text-green-300 font-bold border-b border-gray-800 mb-2">
-                🏠 Volver a la Tienda
+        <div class="p-6 border-b border-slate-800">
+            <h1 class="text-2xl font-black text-white tracking-tighter uppercase">
+                MISU<span class="text-[#FF6600]">TICKETS</span>
+            </h1>
+            <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">Admin Panel</p>
+        </div>
+        
+       <ul class="mt-6 flex-1 px-4 space-y-2">
+            <a href="{{ route('home') }}" class="flex items-center gap-3 py-3 px-4 rounded-2xl transition-all duration-200 text-emerald-500 hover:bg-slate-800 font-bold border border-slate-800/50 mb-4 bg-slate-800/30">
+                <span class="material-icons text-lg">storefront</span>
+                <span class="text-xs uppercase tracking-widest">Ir a Tienda</span>
             </a>
-            <li><a href="#" class="block py-2.5 px-4 hover:bg-gray-700">Dashboard</a></li>
-            <li><a href="{{ route('admin.events.index') }}" class="block py-2.5 px-4 hover:bg-gray-700">Eventos</a></li>
-            <li><a href="#" class="block py-2.5 px-4 hover:bg-gray-700">Recintos</a></li>
-            <li><a href="#" class="block py-2.5 px-4 hover:bg-gray-700">Operaciones y Ventas</a></li>
-            <li><a href="#" class="block py-2.5 px-4 hover:bg-gray-700">Seguridad</a></li>
-            <li><a href="#" class="block py-2.5 px-4 hover:bg-gray-700">Soporte</a></li>
+
+            @php $isDashboard = request()->is('admin/dashboard'); @endphp
+            <li>
+                <a href="{{ url('/admin/dashboard') }}" class="flex items-center gap-3 py-3 px-4 rounded-2xl transition-all duration-200 group {{ $isDashboard ? 'bg-[#FF6600]/10 text-[#FF6600]' : 'hover:bg-slate-800 hover:text-white' }}">
+                    <span class="material-icons text-lg {{ $isDashboard ? 'text-[#FF6600]' : 'text-slate-500 group-hover:text-white transition-colors' }}">speed</span>
+                    <span class="text-xs uppercase tracking-widest font-bold {{ $isDashboard ? 'text-[#FF6600]' : 'text-slate-400 group-hover:text-white' }}">Dashboard</span>
+                </a>
+            </li>
+
+            @php $isEvents = request()->routeIs('admin.events.*'); @endphp
+            <li>
+                <a href="{{ route('admin.events.index') }}" class="flex items-center gap-3 py-3 px-4 rounded-2xl transition-all duration-200 group {{ $isEvents ? 'bg-[#FF6600]/10 text-[#FF6600]' : 'hover:bg-slate-800 hover:text-white' }}">
+                    <span class="material-icons text-lg {{ $isEvents ? 'text-[#FF6600]' : 'text-slate-500 group-hover:text-white transition-colors' }}">event</span>
+                    <span class="text-xs uppercase tracking-widest font-bold {{ $isEvents ? 'text-[#FF6600]' : 'text-slate-400 group-hover:text-white' }}">Eventos</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="#" class="flex items-center gap-3 py-3 px-4 rounded-2xl transition-all duration-200 hover:bg-slate-800 hover:text-white group">
+                    <span class="material-icons text-lg text-slate-500 group-hover:text-white transition-colors">stadium</span>
+                    <span class="text-xs uppercase tracking-widest font-bold text-slate-400 group-hover:text-white">Recintos</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="#" class="flex items-center gap-3 py-3 px-4 rounded-2xl transition-all duration-200 hover:bg-slate-800 hover:text-white group">
+                    <span class="material-icons text-lg text-slate-500 group-hover:text-white transition-colors">receipt_long</span>
+                    <span class="text-xs uppercase tracking-widest font-bold text-slate-400 group-hover:text-white">Ventas</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="#" class="flex items-center gap-3 py-3 px-4 rounded-2xl transition-all duration-200 hover:bg-slate-800 hover:text-white group">
+                    <span class="material-icons text-lg text-slate-500 group-hover:text-white transition-colors">security</span>
+                    <span class="text-xs uppercase tracking-widest font-bold text-slate-400 group-hover:text-white">Seguridad</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="#" class="flex items-center gap-3 py-3 px-4 rounded-2xl transition-all duration-200 hover:bg-slate-800 hover:text-white group">
+                    <span class="material-icons text-lg text-slate-500 group-hover:text-white transition-colors">support_agent</span>
+                    <span class="text-xs uppercase tracking-widest font-bold text-slate-400 group-hover:text-white">Soporte</span>
+                </a>
+            </li>
         </ul>
 
-        <div class="p-4 border-t border-gray-700">
+        <div class="p-4 border-t border-slate-800">
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="w-full text-left block py-2 px-4 rounded text-red-400 hover:bg-gray-700 hover:text-red-300 font-bold transition duration-200">
-                    🚪 Cerrar Sesión
+                <button type="submit" class="w-full flex items-center gap-3 py-3 px-4 rounded-2xl text-red-400 hover:bg-red-500/10 hover:text-red-300 font-bold transition duration-200">
+                    <span class="material-icons text-lg">logout</span>
+                    <span class="text-xs uppercase tracking-widest">Cerrar Sesión</span>
                 </button>
             </form>
         </div>
     </nav>
 
-    <main class="flex-1 overflow-y-auto p-6">
+    <main class="flex-1 overflow-y-auto p-6 md:p-10 relative">
         @yield('content')
     </main>
 
