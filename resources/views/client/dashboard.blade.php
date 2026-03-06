@@ -40,8 +40,8 @@
                                 <span class="bg-[#FF6600] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full inline-block mb-3">
                                     Pase Confirmado
                                 </span>
-                                <h3 class="text-xl font-bold leading-tight mb-1">Evento Próximamente</h3>
-                                <p class="text-slate-400 text-xs">ID: {{ substr($ticket->ticket_code, 0, 8) }}...</p>
+                                <h3 class="text-xl font-bold leading-tight mb-1">{{ $ticket->event->title ?? 'Evento Próximamente' }}</h3>
+                                <p class="text-slate-400 text-xs tracking-widest">ID: {{ strtoupper(substr($ticket->ticket_code, 0, 8)) }}</p>
                             </div>
                             <div class="p-6 flex-1 flex flex-col justify-between bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
                                 <div class="space-y-4">
@@ -58,10 +58,15 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="mt-6 pt-6 border-t border-slate-200 border-dashed text-center">
-                                    <button class="text-[#FF6600] text-xs font-black uppercase tracking-widest hover:text-slate-900 transition-colors">
-                                        Ver Código QR &rarr;
+                                
+                                <div class="mt-6 pt-6 border-t border-slate-200 border-dashed flex flex-col sm:flex-row justify-between items-center gap-4">
+                                    <button class="text-slate-500 text-[10px] font-black uppercase tracking-widest hover:text-[#FF6600] transition-colors flex items-center gap-1">
+                                        <span class="material-icons text-[16px]">qr_code_scanner</span> Ver QR
                                     </button>
+                                    
+                                    <a href="{{ route('client.ticket.download', $ticket->id) }}" target="_blank" class="w-full sm:w-auto bg-slate-900 hover:bg-[#FF6600] text-white text-[10px] font-black py-3 px-4 rounded-xl uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-[#FF6600]/30">
+                                        Descargar PDF <span class="material-icons text-[16px]">download</span>
+                                    </a>
                                 </div>
                             </div>
                         </div>
