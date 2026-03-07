@@ -1,5 +1,10 @@
 <?php
 
+// Prueba ultra simple
+Route::get('/vitrina', function () {
+    return view('admin.events.show', ['nombreEvento' => 'Evento de Prueba']);
+});
+
 use App\Http\Middleware\IsAdmin;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
