@@ -25,12 +25,15 @@ class StoreController extends Controller
     public function index()
     {
         // Aquí sí traemos TODOS los eventos publicados
+        /* ESTA PARTE SE COMENTA PARA PODER USAR DATOS QUEMADOS SIN ERRORES DE BASE DE DATOS
         $events = Event::with(['category', 'venue'])
                       ->where('status', 'Published')
                       ->orderBy('event_date', 'asc')
                       ->get();
+        */
 
-        return view('events.index', compact('events'));
+        // Cambiamos el return original para que no pida la variable $events que acabamos de comentar
+        return view('events.index');
     }
 
     // 3. EL DETALLE DEL EVENTO (/eventos/{id}) -> La misión de Jean
