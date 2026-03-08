@@ -1,17 +1,18 @@
 <?php
 
-// Prueba ultra simple
-Route::get('/vitrina', function () {
-    return view('admin.events.show', ['nombreEvento' => 'Evento de Prueba']);
-});
-
+use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\IsAdmin;
 use App\Http\Controllers\ProfileController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\StoreController;
+use App\Http\Controllers\AdminController;
+
+// Prueba ultra simple (Puedes borrarla después)
+Route::get('/vitrina', function () {
+    return view('admin.events.show', ['nombreEvento' => 'Evento de Prueba']);
+});
 
 // ==========================================
 // 🌍 1. RUTAS FRONT OFFICE (Públicas) -> JEAN / ELÍAS
@@ -25,11 +26,7 @@ Route::get('/eventos', [StoreController::class, 'index'])->name('events.index');
 
 // El Detalle del Evento
 Route::get('/eventos/{id}', [StoreController::class, 'show'])->name('events.show');
-// Tu panel
-    Route::get('/mi-panel', [ClientController::class, 'dashboard'])->name('client.dashboard');
-    
-    // LA NUEVA RUTA PARA DESCARGAR EL PDF
-    Route::get('/mi-panel/ticket/{id}/descargar', [ClientController::class, 'downloadTicket'])->name('client.ticket.download');
+
 
 // ==========================================
 // 🏢 2. RUTAS BACK OFFICE (Panel de Admin) -> ÁNGEL / LUIS
@@ -38,10 +35,8 @@ Route::get('/eventos/{id}', [StoreController::class, 'show'])->name('events.show
 
 Route::middleware(['auth', 'role:SuperAdmin|Organizador'])->prefix('admin')->name('admin.')->group(function () {
     
-    // El Dashboard principal
-    Route::get('/dashboard', function () {
-        return view('dashboard'); // Asegúrate de que esta vista exista
-    })->name('dashboard');
+    // AQUÍ ESTÁ EL CAMBIO: El Dashboard principal ahora apunta a tu AdminController
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
     // CRUD de Eventos (Ángel)
     Route::resource('events', EventController::class);
@@ -66,7 +61,12 @@ Route::middleware('auth')->group(function () {
 // 🎟️ 4. RUTAS DEL CLIENTE (Usuarios normales) -> LUIS
 // ==========================================
 Route::middleware(['auth'])->group(function () {
+    
+    // Tu panel (Movido a la zona segura)
     Route::get('/mi-panel', [ClientController::class, 'dashboard'])->name('client.dashboard');
+    
+    // LA RUTA PARA DESCARGAR EL PDF (Movida a la zona segura)
+    Route::get('/mi-panel/ticket/{id}/descargar', [ClientController::class, 'downloadTicket'])->name('client.ticket.download');
     
     // LA PANTALLA DEL CAJERO (Muestra el formulario)
     Route::get('/checkout/{event}', [CheckoutController::class, 'show'])->name('checkout.show');
