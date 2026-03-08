@@ -7,4 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class Venue extends Model
 {
    protected $fillable = ['name', 'city', 'address', 'capacity'];
+
+   public function venue()
+   {
+       return $this->hasMany(Event::class);
+   }
 }
+

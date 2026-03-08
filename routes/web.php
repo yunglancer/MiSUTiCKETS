@@ -8,6 +8,8 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\VenueController;
+use App\Http\Controllers\CategoryController;
 
 // Prueba ultra simple (Puedes borrarla después)
 Route::get('/vitrina', function () {
@@ -40,6 +42,12 @@ Route::middleware(['auth', 'role:SuperAdmin|Organizador'])->prefix('admin')->nam
 
     // CRUD de Eventos (Ángel)
     Route::resource('events', EventController::class);
+
+    // CRUD de Recintos (Ángel)
+    Route::resource('venues', VenueController::class);
+
+    // CRUD de Categorías (Ángel)
+    Route::resource('categories', CategoryController::class);
 
     // Aquí Ángel colocará sus rutas del CRUD de eventos adicionales
     // Aquí el Programador Extra colocará las rutas de Venues y Categories.
