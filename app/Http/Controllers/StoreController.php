@@ -10,11 +10,11 @@ class StoreController extends Controller
     // 1. LA LANDING PAGE (welcome) -> Muestra solo algunos eventos
     public function landing()
     {
-        // Traemos solo 3 eventos para la portada (puedes filtrar por 'is_featured' si Ángel agregó ese campo)
+        // Traemos solo 3 eventos para la portada
         $featuredEvents = Event::with(['category', 'venue'])
                       ->where('status', 'Published')
                       ->orderBy('event_date', 'asc')
-                      ->take(3) // Solo manda 3 para no saturar la landing
+                      ->take(3) 
                       ->get();
 
         // Mandamos esos 3 eventos a la vista welcome (Landing Page)
@@ -24,16 +24,15 @@ class StoreController extends Controller
     // 2. EL CATÁLOGO COMPLETO (/eventos) -> La misión de Elías
     public function index()
     {
-        // Aquí sí traemos TODOS los eventos publicados
-        /* ESTA PARTE SE COMENTA PARA PODER USAR DATOS QUEMADOS SIN ERRORES DE BASE DE DATOS
+        // MODIFICACIÓN DE ELÍAS: Activamos la búsqueda de eventos
+        // Traemos TODOS los eventos publicados con sus categorías y lugares
         $events = Event::with(['category', 'venue'])
                       ->where('status', 'Published')
                       ->orderBy('event_date', 'asc')
                       ->get();
-        */
 
-        // Cambiamos el return original para que no pida la variable $events que acabamos de comentar
-        return view('events.index');
+        // MODIFICACIÓN DE ELÍAS: Ahora sí enviamos la variable $events a la vista
+        return view('events.index', compact('events'));
     }
 
     // 3. EL DETALLE DEL EVENTO (/eventos/{id}) -> La misión de Jean

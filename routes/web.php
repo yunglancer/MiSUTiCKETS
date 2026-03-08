@@ -22,9 +22,11 @@ Route::get('/vitrina', function () {
 Route::get('/', [StoreController::class, 'landing'])->name('home');
 
 // El Catálogo Completo
+// Modificación: Esta ruta ahora llamará a la función 'index' en StoreController
 Route::get('/eventos', [StoreController::class, 'index'])->name('events.index');
 
 // El Detalle del Evento
+// Modificación: Esta ruta llamará a la función 'show' en StoreController
 Route::get('/eventos/{id}', [StoreController::class, 'show'])->name('events.show');
 
 
