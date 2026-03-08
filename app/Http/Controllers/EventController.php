@@ -108,4 +108,15 @@ class EventController extends Controller
 
         return redirect()->route('admin.events.index')->with('success', 'Evento eliminado correctamente.');
     }
+
+    // Esta función es para la cartelera pública de Elías
+public function list()
+{
+    // Traemos todos los eventos publicados
+    $events = Event::where('status', 'Published')->latest()->get();
+
+    // Enviamos los datos a la vista que modificamos antes
+    return view('events.index', compact('events'));
+}
+
 }

@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link href="https://fonts.material.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     
     <script id="tailwind-config">
         tailwind.config = {
@@ -41,14 +41,12 @@
             border-radius: 10px;
         }
 
-        /* Punto 2: Estilo Hover para botones de filtro */
         .btn-filter-custom:hover {
             background-color: #ff6b00 !important;
             color: white !important;
             border-color: #ff6b00 !important;
         }
 
-        /* Punto 3: Naranja característico para el buscador */
         .search-custom-focus:focus {
             border-color: #ff6b00 !important;
             --tw-ring-color: rgba(255, 107, 0, 0.2) !important;
@@ -106,71 +104,47 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                     
-                    <div class="group flex flex-col h-full bg-white dark:bg-slate-800 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-700 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300">
-                        <div class="aspect-[16/10] relative overflow-hidden">
-                            <img alt="Festival Verano" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=800" />
-                            <div class="absolute top-5 right-5 bg-white/95 backdrop-blur-sm px-5 py-2 rounded-2xl text-primary font-bold text-sm shadow-sm">Desde $25</div>
-                        </div>
-                        <div class="p-8 flex-grow flex flex-col justify-between">
-                            <div class="flex gap-4">
-                                <div class="flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-700 px-4 py-2 rounded-2xl border border-slate-100 dark:border-slate-600 h-fit">
-                                    <span class="text-[10px] font-bold text-primary uppercase">Mar</span>
-                                    <span class="text-2xl font-black text-slate-900 dark:text-white">15</span>
-                                </div>
-                                <div>
-                                    <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-2 group-hover:text-primary transition-colors leading-tight">Festival de Verano 2026</h3>
-                                    <div class="flex items-center text-slate-400 text-sm font-medium">
-                                        <span class="material-icons text-slate-400 mr-2" style="font-size: 18px;">location_on</span> Estadio Principal, Maracay
+                    @forelse($events as $event)
+                        <div class="group flex flex-col h-full bg-white dark:bg-slate-800 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-700 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300">
+                            <div class="aspect-[16/10] relative overflow-hidden">
+                                @if($event->image_path)
+                                    <img src="{{ asset('storage/' . $event->image_path) }}" 
+                                         alt="{{ $event->title }}" 
+                                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                @else
+                                    <img src="https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=800" 
+                                         alt="Default" 
+                                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                @endif
+                                <div class="absolute top-5 right-5 bg-white/95 backdrop-blur-sm px-5 py-2 rounded-2xl text-primary font-bold text-sm shadow-sm">Desde $25</div>
+                            </div>
+                            <div class="p-8 flex-grow flex flex-col justify-between">
+                                <div class="flex gap-4">
+                                    <div class="flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-700 px-4 py-2 rounded-2xl border border-slate-100 dark:border-slate-600 h-fit">
+                                        <span class="text-[10px] font-bold text-primary uppercase">{{ \Carbon\Carbon::parse($event->event_date)->format('M') }}</span>
+                                        <span class="text-2xl font-black text-slate-900 dark:text-white">{{ \Carbon\Carbon::parse($event->event_date)->format('d') }}</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-2 group-hover:text-primary transition-colors leading-tight">
+                                            {{ $event->title }}
+                                        </h3>
+                                        <div class="flex items-center text-slate-400 text-sm font-medium">
+                                            <span class="material-icons text-slate-400 mr-2" style="font-size: 18px;">location_on</span> 
+                                            {{ $event->venue->name ?? 'Ubicación no definida' }}
+                                        </div>
                                     </div>
                                 </div>
+                                
+                                <a href="{{ route('events.show', $event->id) }}" class="block w-full mt-6 py-4 bg-slate-900 hover:bg-primary text-white text-center font-bold rounded-2xl transition-all shadow-md active:scale-[0.98] uppercase tracking-widest text-xs">
+                                    Ver Detalles
+                                </a>
                             </div>
-                            <button class="w-full mt-6 py-4 bg-slate-900 hover:bg-primary text-white font-bold rounded-2xl transition-all shadow-md active:scale-[0.98] uppercase tracking-widest text-xs">Seleccionar Entradas</button>
                         </div>
-                    </div>
-
-                    <div class="group flex flex-col h-full bg-white dark:bg-slate-800 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-700 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300">
-                        <div class="aspect-[16/10] relative overflow-hidden">
-                            <img alt="Gala de Ballet" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=800" />
-                            <div class="absolute top-5 right-5 bg-white/95 backdrop-blur-sm px-5 py-2 rounded-2xl text-primary font-bold text-sm shadow-sm">Desde $15</div>
+                    @empty
+                        <div class="col-span-full">
+                            <p class="text-center text-gray-500 py-10">Aún no hay eventos publicados. ¡Vuelve pronto!</p>
                         </div>
-                        <div class="p-8 flex-grow flex flex-col justify-between">
-                            <div class="flex gap-4">
-                                <div class="flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-700 px-4 py-2 rounded-2xl border border-slate-100 dark:border-slate-600 h-fit">
-                                    <span class="text-[10px] font-bold text-primary uppercase">Mar</span>
-                                    <span class="text-2xl font-black text-slate-900 dark:text-white">20</span>
-                                </div>
-                                <div>
-                                    <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-2 group-hover:text-primary transition-colors leading-tight">Gala de Ballet Clásico</h3>
-                                    <div class="flex items-center text-slate-400 text-sm font-medium">
-                                        <span class="material-icons text-slate-400 mr-2" style="font-size: 18px;">location_on</span> Teatro Teresa Carreño
-                                    </div>
-                                </div>
-                            </div>
-                            <button class="w-full mt-6 py-4 bg-slate-900 hover:bg-primary text-white font-bold rounded-2xl transition-all shadow-md active:scale-[0.98] uppercase tracking-widest text-xs">Seleccionar Entradas</button>
-                        </div>
-                    </div>
-
-                    <div class="group flex flex-col h-full bg-white dark:bg-slate-800 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-700 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300">
-                        <div class="aspect-[16/10] relative overflow-hidden">
-                            <img alt="Rock en vivo" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800" />
-                            <div class="absolute top-5 right-5 bg-white/95 backdrop-blur-sm px-5 py-2 rounded-2xl text-primary font-bold text-sm shadow-sm">Desde $15</div>
-                        </div>
-                        <div class="p-8 flex-grow flex flex-col justify-between">
-                            <div class="flex gap-4">
-                                <div class="flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-700 px-4 py-2 rounded-2xl border border-slate-100 dark:border-slate-600 h-fit">
-                                    <span class="text-[10px] font-bold text-primary uppercase">Mar</span>
-                                    <span class="text-2xl font-black text-slate-900 dark:text-white">25</span>
-                                </div>
-                                <div>
-                                    <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-2 group-hover:text-primary transition-colors leading-tight">Rock en la Ciudad</h3>
-                                    <div class="flex items-center text-slate-400 text-sm font-medium">
-                                        <span class="material-icons text-slate-400 mr-2" style="font-size: 18px;">location_on</span> Plaza Bolívar
-                                    </div>
-                                </div>
-                            </div>
-                            <button class="w-full mt-6 py-4 bg-slate-900 hover:bg-primary text-white font-bold rounded-2xl transition-all shadow-md active:scale-[0.98] uppercase tracking-widest text-xs">Seleccionar Entradas</button>
-                        </div>
-                    </div>
+                    @endforelse
 
                 </div>
             </div>
