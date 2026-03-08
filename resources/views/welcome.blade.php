@@ -7,9 +7,9 @@
     <title>MisuTicket - Entradas para los mejores eventos en Venezuela</title>
     <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png">
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -34,51 +34,53 @@
         }
     </script>
     <style type="text/tailwindcss">
-        body {
-            font-family: 'Be Vietnam Pro', sans-serif;
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #ff6b00;
-            border-radius: 10px;
-        }
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
+        body { font-family: 'Be Vietnam Pro', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #ff6b00; border-radius: 10px; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
     </style>
 </head>
 
 <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased font-display">
+    
     <x-navbar />
-    </header>
+    
     <main>
-        <section class="relative w-full h-[550px] lg:h-[650px] overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/40 to-transparent z-10"></div>
-            <img alt="Concierto masivo en vivo" class="absolute inset-0 w-full h-full object-cover object-center" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA10IFgXLueJ5w4nwXAR-9EuezkDxvzf5KP3Jt3NBZz139BZ0mQZS4HKLm6VuVUvSkc0lfXN2ZbSeC4OMqjHTx42yIpRdG8zHKeoTP5DjAANtKXG2SfKuk0Lj9FS29GFMdhawPOs6k0QzMCA0VsX7JdHqP_SPn_Y9EQ2n-hsyd9vq3zDGodnxjNcL-CXDjOmUeaqoFJz7Q8uJMzR6og9Ss-0cWyVzHzL5oU8xQHVFRU4ImiyVrOG0Q-_C1pVhf4R_exQm6y-zoS-Psp" />
+       <section class="relative w-full h-[550px] lg:h-[650px] overflow-hidden bg-slate-900">
+            <div class="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-transparent z-10"></div>
+            
+            <img alt="Público en concierto" class="absolute inset-0 w-full h-full object-cover object-center opacity-60" 
+                 src="https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&w=2000&q=80" />
+            
             <div class="container mx-auto px-4 relative z-20 h-full flex flex-col justify-center max-w-4xl">
-                <span class="inline-block px-3 py-1 bg-primary text-white text-xs font-bold rounded mb-4 uppercase tracking-widest">Destacado</span>
-                <h1 class="text-5xl lg:text-7xl font-bold text-white leading-tight mb-6">
-                    Caracas Live <br /> <span class="text-primary">Fest 2026</span>
+                <span class="inline-block px-3 py-1 bg-[#FF6600] text-white text-xs font-black rounded mb-4 uppercase tracking-widest w-max shadow-md">
+                    MiSUTiCKETS Oficial
+                </span>
+                
+                <h1 class="text-5xl lg:text-7xl font-black text-white leading-tight mb-6">
+                    Tu entrada a las <br /> <span class="text-[#FF6600]">Mejores Experiencias</span>
                 </h1>
-                <p class="text-lg text-slate-200 mb-8 max-w-xl">
-                    Vive la experiencia musical más grande del año. Los artistas más influyentes del momento en un solo escenario. ¡Entradas ya a la venta para la temporada 2026!
+                
+                <p class="text-lg text-slate-300 mb-8 max-w-xl font-medium leading-relaxed">
+                    Descubre los eventos más esperados del país. Conciertos, teatro, deportes y festivales. Compra tus entradas de forma rápida, 100% segura y sin filas.
                 </p>
+                
                 <div class="flex flex-wrap gap-4">
-                    <button class="px-8 py-4 bg-primary text-white font-bold rounded-xl hover:shadow-xl hover:shadow-primary/40 transition-all flex items-center gap-2 group">
-                        Comprar Entradas
-                        <span class="material-icons transition-transform group-hover:translate-x-1">local_activity</span>
-                    </button>
-                    <button class="px-8 py-4 bg-white/10 backdrop-blur-md text-white font-bold rounded-xl border border-white/20 hover:bg-white/20 transition-all">
-                        Ver Detalles
-                    </button>
+                    <a href="{{ route('events.index') }}" class="px-8 py-4 bg-[#FF6600] text-white font-black rounded-xl hover:bg-white hover:text-slate-900 transition-all flex items-center gap-2 group shadow-lg shadow-[#FF6600]/30 uppercase tracking-widest text-sm">
+                        Explorar Cartelera
+                        <span class="material-icons transition-transform group-hover:translate-x-1">arrow_forward</span>
+                    </a>
+                    
+                    @guest
+                    <a href="{{ route('register') }}" class="px-8 py-4 bg-white/10 backdrop-blur-md text-white font-bold rounded-xl border border-white/20 hover:bg-white/20 transition-all uppercase tracking-widest text-sm">
+                        Crear Cuenta Libre
+                    </a>
+                    @endguest
                 </div>
             </div>
         </section>
+
         <section class="py-20 bg-white">
             <div class="container mx-auto px-4">
                 <div class="flex items-end justify-between mb-12">
@@ -86,172 +88,51 @@
                         <h2 class="text-3xl font-bold text-slate-900 mb-2 tracking-tight">Eventos Destacados 2026</h2>
                         <p class="text-slate-500">Lo más buscado en Venezuela esta temporada</p>
                     </div>
-                    <a class="text-primary font-bold flex items-center gap-1 group text-sm uppercase tracking-wider" href="#">
+                    <a class="text-primary font-bold flex items-center gap-1 group text-sm uppercase tracking-wider" href="{{ route('events.index') }}">
                         Ver todos
                         <span class="material-icons text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
                     </a>
                 </div>
+                
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <div class="group relative bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300">
-                        <div class="aspect-video relative overflow-hidden">
-                            <img alt="Evento deportivo" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfPtXCQTB1-jBj4QdxPCb4Py6dxP7TNsX1UY3O0UwRiu-RLnoyo1RQV2d7XCXWaGvK4JlRrymNbVoA3pL_yjyFA1d8Jo0Xtq9qLplq7NeNl7bmZB1XzbTRi7i9FU0ICW2IJUbrd8h-jC7AkkYgISrY4u9OoSqaY0rQM0RPp5wACejudsC4SytahwIvii4tYIl8NnSFcbOfKnArFZI4xye6gqkQ78Pe9EbVMk_cSMHgPuh9_qEn67gnxTu1TafQ1qPdIOb5vK8ctg0i" />
-                            <div class="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-4 py-1.5 rounded-full text-primary font-bold text-sm shadow-sm">
-                                Desde $25
-                            </div>
-                        </div>
-                        <div class="p-6">
-                            <div class="flex gap-4 mb-6">
-                                <div class="flex flex-col items-center justify-center bg-primary/5 rounded-xl px-4 py-2 min-w-[65px] border border-primary/10">
-                                    <span class="text-xs uppercase text-primary font-bold">Oct</span>
-                                    <span class="text-2xl font-bold text-slate-900">15</span>
-                                </div>
-                                <div>
-                                    <h3 class="text-xl font-bold text-slate-900 mb-1 group-hover:text-primary transition-colors">Clásico del Fútbol Venezolano</h3>
-                                    <p class="text-sm text-slate-500 flex items-center gap-1">
-                                        <span class="material-icons text-base text-slate-400">location_on</span> Estadio Monumental, Caracas (2026)
-                                    </p>
+                    @forelse($featuredEvents as $event)
+                        <div class="group relative bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300 flex flex-col">
+                            <div class="aspect-video relative overflow-hidden bg-slate-100">
+                                <img alt="{{ $event->title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                                     src="{{ $event->image_path ? asset('storage/' . $event->image_path) : 'https://placehold.co/600x400/0f172a/FFF?text=MiSUTiCKETS' }}" />
+                                <div class="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-4 py-1.5 rounded-full text-primary font-bold text-sm shadow-sm">
+                                    {{ $event->category ? $event->category->name : 'General' }}
                                 </div>
                             </div>
-                            <button class="w-full py-3.5 bg-slate-900 hover:bg-primary text-white font-bold rounded-xl transition-all shadow-md active:scale-[0.98]">
-                                Seleccionar Entradas
-                            </button>
-                        </div>
-                    </div>
-                    <div class="group relative bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300">
-                        <div class="aspect-video relative overflow-hidden">
-                            <img alt="Teatro y cultura" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMh7F7G8CGWieYcpZ-jJriy29xNxBHjvTjkN13GWJmVx5BnJhxTbj5bZNBKosvLAUZ6-wZJFr3Pa4_6Ys9jliPBxa2650qHYmhr5XUdaw84op_LXHCb-yS5mT9Zwm2LeyZiaQ0hOzWi65KTkGF8vJyvPwyy6QhwDFPBFdCGW4rGHy1Tv7k6UndUiytE2ROzLSGmXTwBjRImkS2YfzwpmPFDEDmu_cep9jvdIHCB27qLQlvUhumYhs6rMT5qSuql46vWIigPHloYj1g" />
-                            <div class="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-4 py-1.5 rounded-full text-primary font-bold text-sm shadow-sm">
-                                Desde $15
+                            <div class="p-6 flex-1 flex flex-col justify-between">
+                                <div class="flex gap-4 mb-6">
+                                    <div class="flex flex-col items-center justify-center bg-primary/5 rounded-xl px-4 py-2 min-w-[65px] border border-primary/10">
+                                        <span class="text-xs uppercase text-primary font-bold">{{ \Carbon\Carbon::parse($event->event_date)->format('M') }}</span>
+                                        <span class="text-2xl font-bold text-slate-900">{{ \Carbon\Carbon::parse($event->event_date)->format('d') }}</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-xl font-bold text-slate-900 mb-1 group-hover:text-primary transition-colors">{{ $event->title }}</h3>
+                                        <p class="text-sm text-slate-500 flex items-center gap-1">
+                                            <span class="material-icons text-base text-slate-400">location_on</span> {{ $event->venue ? $event->venue->name : 'Por definir' }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <a href="{{ route('events.show', $event->id) }}" class="block text-center w-full py-3.5 bg-slate-900 hover:bg-primary text-white font-bold rounded-xl transition-all shadow-md active:scale-[0.98]">
+                                    Seleccionar Entradas
+                                </a>
                             </div>
                         </div>
-                        <div class="p-6">
-                            <div class="flex gap-4 mb-6">
-                                <div class="flex flex-col items-center justify-center bg-primary/5 rounded-xl px-4 py-2 min-w-[65px] border border-primary/10">
-                                    <span class="text-xs uppercase text-primary font-bold">Nov</span>
-                                    <span class="text-2xl font-bold text-slate-900">02</span>
-                                </div>
-                                <div>
-                                    <h3 class="text-xl font-bold text-slate-900 mb-1 group-hover:text-primary transition-colors">Gala de Ballet Teresa Carreño</h3>
-                                    <p class="text-sm text-slate-500 flex items-center gap-1">
-                                        <span class="material-icons text-base text-slate-400">location_on</span> Teatro Teresa Carreño, Caracas (2026)
-                                    </p>
-                                </div>
-                            </div>
-                            <button class="w-full py-3.5 bg-slate-900 hover:bg-primary text-white font-bold rounded-xl transition-all shadow-md active:scale-[0.98]">
-                                Seleccionar Entradas
-                            </button>
+                    @empty
+                        <div class="col-span-full text-center py-12">
+                            <span class="material-icons text-6xl text-slate-300 mb-4">event_busy</span>
+                            <h3 class="text-xl font-bold text-slate-800">Estamos preparando nuevos eventos</h3>
+                            <p class="text-slate-500 mt-2">Mantente atento a nuestras redes sociales para los próximos anuncios de MiSUTiCKETS.</p>
                         </div>
-                    </div>
-                    <div class="group relative bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300">
-                        <div class="aspect-video relative overflow-hidden">
-                            <img alt="DJ Set noche" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjCDx-UYNgvjnfNrolZ59lleWAUAnXb_BNj1xiARyVa0Cj9g0PlJGpJwkXcuxk3hPWB1GigK_yZ1CL13liR2_agsNKxKIqkBoykfxmRjhQfJm75VrsxTo3hSRk1Xy-YK7yuJ87NJO4JAMzk0OcKuPTXo_xe4mecFJrDDq-ewgtOVLoZA54TOFFIpSTIsyUFxVRxOFXIszpZllJmUPIrLuCYGCCzwN4s28s6JR9Bz4HWlqJOmxjPgOTmlknbkyOEigZ-mNrUNDXrYBk" />
-                            <div class="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-4 py-1.5 rounded-full text-primary font-bold text-sm shadow-sm">
-                                Desde $40
-                            </div>
-                        </div>
-                        <div class="p-6">
-                            <div class="flex gap-4 mb-6">
-                                <div class="flex flex-col items-center justify-center bg-primary/5 rounded-xl px-4 py-2 min-w-[65px] border border-primary/10">
-                                    <span class="text-xs uppercase text-primary font-bold">Dic</span>
-                                    <span class="text-2xl font-bold text-slate-900">20</span>
-                                </div>
-                                <div>
-                                    <h3 class="text-xl font-bold text-slate-900 mb-1 group-hover:text-primary transition-colors">Electronic Sunset Margarita</h3>
-                                    <p class="text-sm text-slate-500 flex items-center gap-1">
-                                        <span class="material-icons text-base text-slate-400">location_on</span> Playa El Yaque, Nueva Esparta (2026)
-                                    </p>
-                                </div>
-                            </div>
-                            <button class="w-full py-3.5 bg-slate-900 hover:bg-primary text-white font-bold rounded-xl transition-all shadow-md active:scale-[0.98]">
-                                Seleccionar Entradas
-                            </button>
-                        </div>
-                    </div>
+                    @endforelse
                 </div>
             </div>
         </section>
-        <section class="py-20 bg-slate-50">
-            <div class="container mx-auto px-4">
-                <h2 class="text-2xl font-bold text-slate-900 mb-10 tracking-tight">Próximos Eventos 2026</h2>
-                <div class="space-y-4">
-                    <div class="flex flex-col lg:flex-row items-center gap-6 p-5 bg-white rounded-2xl border border-slate-100 hover:shadow-xl hover:shadow-slate-200/50 transition-all">
-                        <div class="w-full lg:w-48 h-32 rounded-xl overflow-hidden shrink-0">
-                            <img alt="Pequeño evento" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-_XuTk1jyjfU4XwyCb1kPpUGi6ezeWRd0buG5L390B0eqI3PC4C9MQb74o6C4RkD4nEgqtCaYWxG5KZAc7N12mDnBooz46wrGSW10GpX-4VW-T_N03ITXbkrrt5LlwrFZeNilWEhtp4svJO5MBFQhDqix1QH_G3UQjkEUnfOZ_iUYCc4Ff2f4ZoCouXIEtAgnLs2YaNI0abimHmqdxrbcZKADTO47_7JIKBp0mZkYINjAtjCrt0gVHAHMTzt0dgEpTyij4Epg4Y6Y" />
-                        </div>
-                        <div class="flex-grow flex flex-col md:flex-row md:items-center justify-between gap-6 w-full">
-                            <div>
-                                <span class="text-xs font-bold text-primary mb-1 block uppercase tracking-wider">CONCIERTO</span>
-                                <h4 class="text-lg font-bold text-slate-900">Jazz Night en El Hatillo</h4>
-                                <div class="flex flex-wrap gap-4 mt-2 text-sm text-slate-500">
-                                    <span class="flex items-center gap-1"><span class="material-icons text-sm text-slate-400">calendar_today</span> 25 Oct, 2026</span>
-                                    <span class="flex items-center gap-1"><span class="material-icons text-sm text-slate-400">schedule</span> 08:00 PM</span>
-                                    <span class="flex items-center gap-1"><span class="material-icons text-sm text-slate-400">location_on</span> Caracas, VE</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-8">
-                                <div class="text-right">
-                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Desde</p>
-                                    <p class="text-xl font-bold text-slate-900">$12.00</p>
-                                </div>
-                                <button class="px-8 py-2.5 border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold rounded-xl transition-all">
-                                    Comprar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex flex-col lg:flex-row items-center gap-6 p-5 bg-white rounded-2xl border border-slate-100 hover:shadow-xl hover:shadow-slate-200/50 transition-all">
-                        <div class="w-full lg:w-48 h-32 rounded-xl overflow-hidden shrink-0">
-                            <img alt="Club nocturno" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhC0-UOACchQY_74YlLs9fHO90hmGtL1vciPVIlEGteF5dgC--CuOeRDTDk1QBX5VJ36l7V2gUHV827nIX9FKfSfnL2EpoaMaY-h6atkFyuWpt74CLDRUoOcu6-izURQbG5uRx01a2Td80jeuO8om5rHfr6Xojs--tgsX-Idny29S9KGz92tLEjFNPSEiPnNMyNsnbX7m1Qh9pVP1FJdZwmNb-PyLc2MlfUpmFtUiGL676mgbsN4gY2yhLsnnNMDW415nDb1SLijjl" />
-                        </div>
-                        <div class="flex-grow flex flex-col md:flex-row md:items-center justify-between gap-6 w-full">
-                            <div>
-                                <span class="text-xs font-bold text-primary mb-1 block uppercase tracking-wider">FESTIVAL</span>
-                                <h4 class="text-lg font-bold text-slate-900">Neon Party Maracaibo</h4>
-                                <div class="flex flex-wrap gap-4 mt-2 text-sm text-slate-500">
-                                    <span class="flex items-center gap-1"><span class="material-icons text-sm text-slate-400">calendar_today</span> 30 Oct, 2026</span>
-                                    <span class="flex items-center gap-1"><span class="material-icons text-sm text-slate-400">schedule</span> 10:00 PM</span>
-                                    <span class="flex items-center gap-1"><span class="material-icons text-sm text-slate-400">location_on</span> Maracaibo, ZU</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-8">
-                                <div class="text-right">
-                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Desde</p>
-                                    <p class="text-xl font-bold text-slate-900">$20.00</p>
-                                </div>
-                                <button class="px-8 py-2.5 border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold rounded-xl transition-all">
-                                    Comprar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex flex-col lg:flex-row items-center gap-6 p-5 bg-white rounded-2xl border border-slate-100 hover:shadow-xl hover:shadow-slate-200/50 transition-all">
-                        <div class="w-full lg:w-48 h-32 rounded-xl overflow-hidden shrink-0">
-                            <img alt="Béisbol" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJ6FBZeBHqr2JSjR09kOU88sRW66K5h2ItjI9Nk9bSJS03i3_79iD2z2QQ0STUL3_80vIwkghsQC9UfAtrOCsmCaOAo41eOiGFkvMj52FtFrb2NtR6inCZ_IXyh4Otyu1_MP-_T3yUdw30uva9y3LsXIeCJWM1FZqmGoWhm1N1Wn4ft2R4jhPlvCbsb3D7lXwK96GfmsEwEOeUzPojxzvOCAq_6_ha2zoESHun5MQLydpWlgk0yUqNN6yYknKO3ShMTCKsPojmpPx4" />
-                        </div>
-                        <div class="flex-grow flex flex-col md:flex-row md:items-center justify-between gap-6 w-full">
-                            <div>
-                                <span class="text-xs font-bold text-primary mb-1 block uppercase tracking-wider">DEPORTES</span>
-                                <h4 class="text-lg font-bold text-slate-900">Leones vs Magallanes</h4>
-                                <div class="flex flex-wrap gap-4 mt-2 text-sm text-slate-500">
-                                    <span class="flex items-center gap-1"><span class="material-icons text-sm text-slate-400">calendar_today</span> 05 Nov, 2026</span>
-                                    <span class="flex items-center gap-1"><span class="material-icons text-sm text-slate-400">schedule</span> 07:00 PM</span>
-                                    <span class="flex items-center gap-1"><span class="material-icons text-sm text-slate-400">location_on</span> Caracas, VE</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-8">
-                                <div class="text-right">
-                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Desde</p>
-                                    <p class="text-xl font-bold text-slate-900">$8.00</p>
-                                </div>
-                                <button class="px-8 py-2.5 border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold rounded-xl transition-all">
-                                    Comprar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+
         <section class="py-24 relative overflow-hidden bg-primary">
             <div class="absolute inset-0 opacity-20 pointer-events-none">
                 <div class="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2"></div>
@@ -269,13 +150,13 @@
             </div>
         </section>
     </main>
+    
     <x-footer />
-    </footer>
 
     <script>
-        const themeBtn = document.querySelector('button:has(.material-icons:contains("light_mode"))') || document.querySelectorAll('button')[0]; // Selecciona el botón de tema
+        const themeBtn = document.querySelector('button:has(.material-icons:contains("light_mode"))') || document.querySelectorAll('button')[0]; 
 
-        themeBtn.addEventListener('click', () => {
+        themeBtn?.addEventListener('click', () => {
             const html = document.documentElement;
             if (html.classList.contains('light')) {
                 html.classList.remove('light');
@@ -288,12 +169,10 @@
             }
         });
 
-        // Mantener el tema al recargar
         if (localStorage.getItem('theme') === 'dark') {
             document.documentElement.classList.add('dark');
             document.documentElement.classList.remove('light');
         }
     </script>
 </body>
-
 </html>
