@@ -38,7 +38,28 @@
                 <tbody class="divide-y divide-slate-50">
                     @forelse($events as $event)
                     <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="px-6 py-5 whitespace-nowrap text-sm font-bold text-slate-800">{{ $event->title }}</td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 flex-shrink-0">
+                                    @if($event->image_path)
+                                        <img src="{{ asset('storage/' . $event->image_path) }}" class="w-full h-full object-cover">
+                                    @else
+                                        <div class="w-full h-full flex items-center justify-center text-slate-300">
+                                            <span class="material-icons text-lg">image</span>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div>
+                                    <div class="text-sm font-bold text-slate-800 leading-tight flex items-center gap-2">
+                                        {{ $event->title }}
+                                        @if($event->is_featured)
+                                            <span class="material-icons text-[#FF6600] text-[16px]" title="Evento Destacado">stars</span>
+                                        @endif
+                                    </div>
+                                    <div class="text-[9px] text-slate-400 font-black uppercase tracking-tighter mt-0.5">ID: #{{ $event->id }}</div>
+                                </div>
+                            </div>
+                        </td>
                         <td class="px-6 py-5 whitespace-nowrap text-xs text-slate-500 font-medium">{{ $event->category ? $event->category->name : 'N/A' }}</td>
                         <td class="px-6 py-5 whitespace-nowrap text-xs text-slate-500 font-medium">{{ $event->venue ? $event->venue->name : 'N/A' }}</td>
                         <td class="px-6 py-5 whitespace-nowrap text-xs text-slate-500 font-medium">{{ \Carbon\Carbon::parse($event->event_date)->format('d/m/Y H:i') }}</td>

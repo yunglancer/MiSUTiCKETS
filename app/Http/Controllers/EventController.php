@@ -77,6 +77,7 @@ class EventController extends Controller
             'event_date' => 'required|date',
             'status' => 'required|in:Draft,Published,Cancelled',
             'image' => 'nullable|image|max:2048',
+            'is_featured' => 'boolean',
         ]);
 
         $data = $request->all();

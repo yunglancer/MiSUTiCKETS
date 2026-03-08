@@ -72,7 +72,18 @@
 
             <div class="border-t border-slate-100 pt-6">
                 <label class="block text-[10px] font-black text-slate-800 uppercase tracking-widest mb-2 ml-1">Imagen de Portada</label>
-                <input type="file" name="image" class="block w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-xs file:font-black file:uppercase file:tracking-widest file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 transition-colors cursor-pointer">
+                
+                <div id="preview-container" class="hidden mb-4">
+                    <div class="relative w-full md:w-72 h-44 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 overflow-hidden group">
+                        <img id="image-preview" src="#" alt="Vista previa" class="w-full h-full object-cover">
+                        <button type="button" onclick="removeImage()" class="absolute top-3 right-3 bg-white/90 p-2 rounded-xl shadow-sm hover:bg-red-50 hover:text-red-600 text-slate-500 transition-all flex items-center justify-center">
+                            <span class="material-icons text-lg">delete_outline</span>
+                        </button>
+                    </div>
+                </div>
+
+                <input type="file" name="image" id="image-input" accept="image/*"
+                       class="block w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-xs file:font-black file:uppercase file:tracking-widest file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 transition-colors cursor-pointer">
             </div>
 
             <div class="flex items-center ml-1 bg-slate-50 p-4 rounded-2xl border border-slate-100 w-max">
@@ -88,4 +99,24 @@
         </form>
     </div>
 </div>
+
+<script>
+    const imageInput = document.getElementById('image-input');
+    const previewContainer = document.getElementById('preview-container');
+    const previewImage = document.getElementById('image-preview');
+
+    imageInput.onchange = evt => {
+        const [file] = imageInput.files;
+        if (file) {
+            previewContainer.classList.remove('hidden');
+            previewImage.src = URL.createObjectURL(file);
+        }
+    }
+
+    function removeImage() {
+        imageInput.value = "";
+        previewContainer.classList.add('hidden');
+        previewImage.src = "#";
+    }
+</script>
 @endsection
