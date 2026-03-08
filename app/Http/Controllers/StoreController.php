@@ -43,6 +43,6 @@ class StoreController extends Controller
                       ->where('status', 'Published')
                       ->findOrFail($id);
 
-        return view('events.show', compact('event'));
+        return view('admin.events.show', compact('event'));
     }
 }
