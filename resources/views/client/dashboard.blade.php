@@ -22,6 +22,13 @@
                             <p class="flex items-center gap-1"><span class="material-icons text-[16px] text-slate-400">badge</span> Cédula: {{ Auth::user()->document_id }}</p>
                             <p class="flex items-center gap-1"><span class="material-icons text-[16px] text-slate-400">phone</span> Teléfono: {{ Auth::user()->phone }}</p>
                         </div>
+                        
+                        <div class="mt-4 pt-4 border-t border-slate-100">
+                            <a href="{{ route('profile.edit') }}" class="inline-flex items-center gap-2 text-[10px] font-black text-slate-400 hover:text-[#FF6600] uppercase tracking-widest transition-colors">
+                                <span class="material-icons text-sm">settings</span> Configurar Perfil
+                            </a>
+                        </div>
+
                     </div>
                 </div>
             </div>
