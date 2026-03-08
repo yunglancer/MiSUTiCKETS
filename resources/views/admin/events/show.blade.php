@@ -42,11 +42,11 @@
                 Destacado
             </span>
             <h1 class="text-6xl md:text-8xl font-bold tracking-tight mb-4 text-white">
-                {{ $nombreEvento ?? 'CARACAS LIVE' }} <br> <span class="text-primary">FEST 2026</span>
+                {{ $event->title }} <br> <span class="text-primary">FEST 2026</span>
             </h1>
             <p class="text-xl text-slate-200 font-medium flex items-center gap-2">
                 <span class="material-symbols-outlined text-primary">location_on</span> 
-                Estadio Monumental Simón Bolívar | <span class="material-symbols-outlined text-primary">calendar_today</span> 15 de Mayo
+                {{ $event->location }} | <span class="material-symbols-outlined text-primary">calendar_today</span> {{ \Carbon\Carbon::parse($event->event_date)->format('d \d\e F') }}
             </p>
         </div>
     </div>
@@ -58,7 +58,7 @@
                 <div class="border-l-4 border-primary pl-6">
                     <h2 class="text-3xl font-bold mb-4 tracking-tight uppercase text-white">Descripción del Evento</h2>
                     <p class="text-slate-400 text-lg leading-relaxed">
-                        Bienvenido a la <strong>Zona de Aislamiento (Misión 3)</strong>. Este diseño utiliza la identidad visual de <strong>MisuTickets</strong>. Aquí los usuarios podrán revisar los detalles antes de proceder al checkout seguro.
+                        {{ $event->description }} a la <strong>Zona de Aislamiento (Misión 3)</strong>. Este diseño utiliza la identidad visual de <strong>MisuTickets</strong>. Aquí los usuarios podrán revisar los detalles antes de proceder al checkout seguro.
                     </p>
                 </div>
                 
@@ -84,14 +84,15 @@
                 <div class="bg-white/5 p-10 rounded-[2rem] border border-white/10 shadow-2xl sticky top-24 backdrop-blur-xl">
                     <p class="text-slate-500 text-sm font-bold uppercase tracking-widest mb-2 italic">Entradas desde</p>
                     <div class="flex items-baseline gap-1 mb-8">
-                        <span class="text-5xl font-bold text-white">$45.00</span>
+                        <span class="text-5xl font-bold text-white">${{ number_format($event->base_price, 2) }}</span>
                         <span class="text-slate-500 text-sm">/ p.p.</span>
                     </div>
                     
-                    <button class="w-full py-5 bg-primary hover:bg-[#e66000] text-white font-bold rounded-2xl transition-all transform hover:shadow-xl hover:shadow-primary/40 active:scale-95 flex items-center justify-center gap-3 text-lg group">
+                <a href="{{ route('checkout.show', $event->id) }}" 
+                    class="w-full py-5 bg-primary hover:bg-[#e66000] text-white font-bold rounded-2xl transition-all transform hover:shadow-xl hover:shadow-primary/40 active:scale-95 flex items-center justify-center gap-3 text-lg group decoration-transparent">
                         Comprar Entradas
-                        <span class="material-icons transition-transform group-hover:translate-x-1">local_activity</span>
-                    </button>
+                    <span class="material-icons transition-transform group-hover:translate-x-1">local_activity</span>
+                </a>
                     
                     <div class="mt-8 space-y-4">
                         <div class="flex items-center gap-3 text-sm text-slate-300">
@@ -105,7 +106,6 @@
                     </div>
                 </div>
             </div>
-            
         </div>
     </div>
 

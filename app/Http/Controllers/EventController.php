@@ -33,7 +33,7 @@ class EventController extends Controller
             'venue_id' => 'required|exists:venues,id',       
             'description' => 'nullable|string',
             'event_date' => 'required|date',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
             'status' => 'required|in:Draft,Published,Cancelled',
         ]);
 
@@ -73,7 +73,8 @@ class EventController extends Controller
             'venue_id' => 'required|exists:venues,id',
             'event_date' => 'required|date',
             'status' => 'required|in:Draft,Published,Cancelled',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|max:10240',
+            'is_featured' => 'boolean',
         ]);
 
         // AJUSTE: Mapeo manual de datos para evitar errores con $request->all()
@@ -110,4 +111,15 @@ class EventController extends Controller
         $event->delete();
         return redirect()->route('admin.events.index')->with('success', 'Evento eliminado de la base de datos.');
     }
+
+    // Esta función es para la cartelera pública de Elías
+public function list()
+{
+    // Traemos todos los eventos publicados
+    $events = Event::where('status', 'Published')->latest()->get();
+
+    // Enviamos los datos a la vista que modificamos antes
+    return view('events.index', compact('events'));
+}
+
 }
