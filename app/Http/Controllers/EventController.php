@@ -35,7 +35,7 @@ class EventController extends Controller
             'venue_id' => 'required|exists:venues,id',       
             'description' => 'nullable|string',
             'event_date' => 'required|date',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
             'status' => 'required|in:Draft,Published,Cancelled',
         ]);
 
@@ -76,7 +76,7 @@ class EventController extends Controller
             'venue_id' => 'required|exists:venues,id',
             'event_date' => 'required|date',
             'status' => 'required|in:Draft,Published,Cancelled',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|max:10240',
             'is_featured' => 'boolean',
         ]);
 

@@ -43,8 +43,8 @@ Route::middleware(['auth', 'role:SuperAdmin|Organizador'])->prefix('admin')->nam
     // CRUD de Eventos (Ángel)
     Route::resource('events', EventController::class);
 
-    // Aquí Ángel colocará sus rutas del CRUD de eventos adicionales
-    // Aquí el Programador Extra colocará las rutas de Venues y Categories.
+   Route::get('/tickets/{id}/verify', [AdminController::class, 'verifyTicket'])->name('tickets.verify');
+    Route::post('/tickets/{id}/mark-used', [AdminController::class, 'markTicketAsUsed'])->name('tickets.markUsed');
 
 });
 
