@@ -13,22 +13,20 @@ class EventController extends Controller
 {
     public function index()
     {
-        $events = Event::latest()->paginate(10);
+        // AJUSTE: Eager Loading para evitar el problema N+1 y optimizar la carga
+        $events = Event::with(['category', 'venue'])->latest()->paginate(10);
         return view('admin.events.index', compact('events'));
     }
 
     public function create()
     {
-        
         $categories = Category::all();
         $venues = Venue::all();
-        
         return view('admin.events.create', compact('categories', 'venues'));
     }
 
     public function store(Request $request)
     {
-        // 1. Validación
         $request->validate([
             'title' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
@@ -39,16 +37,15 @@ class EventController extends Controller
             'status' => 'required|in:Draft,Published,Cancelled',
         ]);
 
-        // 2. Manejo de la imagen
         $imagePath = null;
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('events', 'public');
         }
 
-        // 3. Crear el evento con datos dinámicos
-        Event::create([
+        // AJUSTE: Generación de slug más controlada
+        $event = Event::create([
             'title' => $request->title,
-            'slug' => Str::slug($request->title) . '-' . rand(100, 999),
+            'slug' => Str::slug($request->title) . '-' . time(), // Usamos timestamp para unicidad total
             'description' => $request->description,
             'event_date' => $request->event_date,
             'image_path' => $imagePath,
@@ -61,7 +58,7 @@ class EventController extends Controller
         return redirect()->route('admin.events.index')->with('success', '¡Evento creado con éxito!');
     }
 
-        public function edit(Event $event)
+    public function edit(Event $event)
     {
         $categories = Category::all();
         $venues = Venue::all();
@@ -80,12 +77,20 @@ class EventController extends Controller
             'is_featured' => 'boolean',
         ]);
 
-        $data = $request->all();
-        $data['slug'] = Str::slug($request->title) . '-' . $event->id;
-        $data['is_featured'] = $request->has('is_featured');
+        // AJUSTE: Mapeo manual de datos para evitar errores con $request->all()
+        $data = [
+            'title' => $request->title,
+            'category_id' => $request->category_id,
+            'venue_id' => $request->venue_id,
+            'event_date' => $request->event_date,
+            'status' => $request->status,
+            'description' => $request->description,
+            'is_featured' => $request->has('is_featured'),
+            'slug' => Str::slug($request->title) . '-' . $event->id,
+        ];
 
         if ($request->hasFile('image')) {
-            // Borrar imagen antigua si existe
+            // Borrar imagen antigua físicamente del storage
             if ($event->image_path) {
                 Storage::disk('public')->delete($event->image_path);
             }
@@ -94,19 +99,17 @@ class EventController extends Controller
 
         $event->update($data);
 
-        return redirect()->route('admin.events.index')->with('success', '¡Evento actualizado!');
+        return redirect()->route('admin.events.index')->with('success', '¡Evento actualizado correctamente!');
     }
 
     public function destroy(Event $event)
     {
-        // Borrar la imagen del disco antes de eliminar el registro
         if ($event->image_path) {
             Storage::disk('public')->delete($event->image_path);
         }
 
         $event->delete();
-
-        return redirect()->route('admin.events.index')->with('success', 'Evento eliminado correctamente.');
+        return redirect()->route('admin.events.index')->with('success', 'Evento eliminado de la base de datos.');
     }
 
     // Esta función es para la cartelera pública de Elías
