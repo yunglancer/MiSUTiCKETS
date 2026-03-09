@@ -57,10 +57,21 @@
                 </a>
             </li>
 
+            {{-- Recintos (Venues) --}}
+            @php $isVenues = request()->routeIs('admin.venues.*'); @endphp
             <li>
-                <a href="#" class="flex items-center gap-3 py-3 px-4 rounded-2xl transition-all duration-200 hover:bg-slate-800 hover:text-white group">
-                    <span class="material-icons text-lg text-slate-500 group-hover:text-white transition-colors">stadium</span>
-                    <span class="text-xs uppercase tracking-widest font-bold text-slate-400 group-hover:text-white">Recintos</span>
+                <a href="{{ route('admin.venues.index') }}" class="flex items-center gap-3 py-3 px-4 rounded-2xl transition-all duration-200 group {{ $isVenues ? 'bg-[#FF6600]/10 text-[#FF6600]' : 'hover:bg-slate-800 hover:text-white' }}">
+                    <span class="material-icons text-lg {{ $isVenues ? 'text-[#FF6600]' : 'text-slate-500 group-hover:text-white transition-colors' }}">stadium</span>
+                    <span class="text-xs uppercase tracking-widest font-bold {{ $isVenues ? 'text-[#FF6600]' : 'text-slate-400 group-hover:text-white' }}">Recintos</span>
+                </a>
+            </li>
+
+            {{-- Categorías --}}
+            @php $isCategories = request()->routeIs('admin.categories.*'); @endphp
+            <li>
+                <a href="{{ route('admin.categories.index') }}" class="flex items-center gap-3 py-3 px-4 rounded-2xl transition-all duration-200 group {{ $isCategories ? 'bg-[#FF6600]/10 text-[#FF6600]' : 'hover:bg-slate-800 hover:text-white' }}">
+                    <span class="material-icons text-lg {{ $isCategories ? 'text-[#FF6600]' : 'text-slate-500 group-hover:text-white transition-colors' }}">sell</span>
+                    <span class="text-xs uppercase tracking-widest font-bold {{ $isCategories ? 'text-[#FF6600]' : 'text-slate-400 group-hover:text-white' }}">Categorías</span>
                 </a>
             </li>
 
