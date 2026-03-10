@@ -10,7 +10,7 @@ class VenueController extends Controller
     public function index()
     {
         // Traemos los recintos paginados para mantener el orden
-        $venues = Venue::latest()->paginate(10);
+        $venues = Venue::with('zones')->latest()->paginate(10);
         return view('admin.venues.index', compact('venues'));
     }
 
@@ -26,9 +26,19 @@ class VenueController extends Controller
             'city'     => 'required|string|max:255',
             'address'  => 'required|string',
             'capacity' => 'required|integer|min:1',
+            'zones'    => 'required|array|min:1',
+            'zones.*'  => 'required|string|max:255',
         ]);
 
-        Venue::create($request->all());
+        // 1. Creamos el recinto
+        $venue = Venue::create($request->only(['name', 'city', 'address', 'capacity']));
+
+        // 2. Guardamos las zonas
+        foreach ($request->zones as $zoneName) {
+            $venue->zones()->create([
+                'name' => $zoneName
+            ]);
+        }
 
         return redirect()->route('admin.venues.index')
             ->with('success', '¡Recinto creado con éxito!');
@@ -36,6 +46,8 @@ class VenueController extends Controller
 
     public function edit(Venue $venue)
     {
+        // Cargamos las zonas para asegurarnos de que estén disponibles en la vista
+        $venue->load('zones');
         return view('admin.venues.edit', compact('venue'));
     }
 
@@ -46,12 +58,29 @@ class VenueController extends Controller
             'city'     => 'required|string|max:255',
             'address'  => 'required|string',
             'capacity' => 'required|integer|min:1',
+            'zones'    => 'required|array|min:1',
+            'zones.*'  => 'required|string|max:255',
         ]);
 
-        $venue->update($request->all());
+        // 1. Actualizamos datos básicos del recinto
+        $venue->update($request->only(['name', 'city', 'address', 'capacity']));
+
+        // 2. Sincronizamos zonas: Borramos las anteriores y creamos las nuevas
+        $venue->zones()->delete(); 
+
+        foreach ($request->zones as $zoneName) {
+            $venue->zones()->create([
+                'name' => $zoneName
+            ]);
+        }
 
         return redirect()->route('admin.venues.index')
             ->with('success', 'Recinto actualizado correctamente.');
+    }
+    public function getZones(Venue $venue)
+    {
+        // Esto es lo que Alpine.js lee para mostrar las filas de Precio/Capacidad
+        return response()->json($venue->zones);
     }
 
     public function destroy(Venue $venue)
@@ -62,6 +91,8 @@ class VenueController extends Controller
                 ->with('error', 'No se puede eliminar el recinto porque tiene eventos asociados.');
         }
 
+        // Al borrar el recinto, las zonas se borran automáticamente 
+        // por el "onDelete('cascade')" que pusimos en la migración.
         $venue->delete();
 
         return redirect()->route('admin.venues.index')

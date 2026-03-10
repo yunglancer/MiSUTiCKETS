@@ -51,6 +51,9 @@ Route::middleware(['auth', 'role:SuperAdmin|Organizador'])->prefix('admin')->nam
     // CRUD de Categorías (Ángel)
     Route::resource('categories', CategoryController::class);
 
+    // Ruta para obtener las zonas de un recinto vía AJAX (JSON)
+    Route::get('venues/{venue}/zones-list', [VenueController::class, 'getZones'])->name('venues.zones');
+
     // Aquí Ángel colocará sus rutas del CRUD de eventos adicionales
     // Aquí el Programador Extra colocará las rutas de Venues y Categories.
    Route::get('/tickets/{id}/verify', [AdminController::class, 'verifyTicket'])->name('tickets.verify');

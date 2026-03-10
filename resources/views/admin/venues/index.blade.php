@@ -46,7 +46,7 @@
                 <tbody class="divide-y divide-slate-50">
                     @forelse($venues as $venue)
                     <tr class="hover:bg-slate-50/30 transition-all group">
-                        {{-- Nombre e Icono Visual --}}
+                        {{-- Nombre, Zonas e ID --}}
                         <td class="px-8 py-5">
                             <div class="flex items-center gap-4">
                                 <div class="w-11 h-11 rounded-[1.1rem] bg-orange-50 flex items-center justify-center transition-all duration-300 group-hover:scale-105">
@@ -54,7 +54,19 @@
                                 </div>
                                 <div>
                                     <div class="text-[13px] font-black text-slate-800 uppercase tracking-tight">{{ $venue->name }}</div>
-                                    <div class="text-[9px] text-slate-400 font-bold uppercase mt-0.5 tracking-widest">ID: #{{ $venue->id }}</div>
+                                    
+                                    {{-- Listado de Zonas en Badges --}}
+                                    <div class="flex flex-wrap gap-1 mt-1.5">
+                                        @forelse($venue->zones as $zone)
+                                            <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[8px] font-black uppercase tracking-tighter border border-slate-200/50">
+                                                {{ $zone->name }}
+                                            </span>
+                                        @empty
+                                            <span class="text-[8px] text-slate-400 italic font-bold uppercase tracking-widest">Sin zonas</span>
+                                        @endforelse
+                                    </div>
+
+                                    <div class="text-[9px] text-slate-300 font-bold uppercase mt-1 tracking-widest">ID: #{{ $venue->id }}</div>
                                 </div>
                             </div>
                         </td>
@@ -77,7 +89,7 @@
                             </div>
                         </td>
 
-                        {{-- Botones de Accion Unificados --}}
+                        {{-- Botones de Accion --}}
                         <td class="px-8 py-5 text-right">
                             <div class="flex justify-end gap-2">
                                 <a href="{{ route('admin.venues.edit', $venue->id) }}" 
