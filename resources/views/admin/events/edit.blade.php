@@ -74,12 +74,12 @@
 
             <div class="border-t border-slate-100 pt-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {{-- Imagen que ya existe --}}
+                  {{-- Imagen que ya existe --}}
                     <div>
                         <label class="block text-[10px] font-black text-slate-800 uppercase tracking-widest mb-2 ml-1">Imagen Actual</label>
                         @if($event->image_path)
                             <div class="relative w-full h-44 bg-slate-50 rounded-3xl border border-slate-200 overflow-hidden">
-                                <img src="{{ asset('storage/' . $event->image_path) }}" class="w-full h-full object-cover">
+                                <img src="{{ $event->image_path }}" class="w-full h-full object-cover">
                                 <div class="absolute top-3 left-3 bg-slate-900/50 backdrop-blur-sm text-white text-[8px] font-bold px-2 py-1 rounded-lg uppercase tracking-widest">En Servidor</div>
                             </div>
                         @else

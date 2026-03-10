@@ -7,7 +7,7 @@ use App\Models\Category;
 use App\Models\Venue;    
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
+// Quitamos el Facade Storage porque ahora usaremos la nube directamente
 
 class EventController extends Controller
 {
@@ -39,7 +39,8 @@ class EventController extends Controller
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('events', 'public');
+            // ☁️ MAGIA DE CLOUDINARY: Sube a la nube y devuelve el Link Seguro (HTTPS)
+        $imagePath = cloudinary()->upload($request->file('image')->getRealPath(), ['folder' => 'misutickets_events'])->getSecurePath();
         }
 
         // AJUSTE: Generación de slug más controlada
@@ -55,7 +56,7 @@ class EventController extends Controller
             'venue_id' => $request->venue_id,
         ]);
 
-        return redirect()->route('admin.events.index')->with('success', '¡Evento creado con éxito!');
+        return redirect()->route('admin.events.index')->with('success', '¡Evento creado con éxito en la Nube!');
     }
 
     public function edit(Event $event)
@@ -90,11 +91,8 @@ class EventController extends Controller
         ];
 
         if ($request->hasFile('image')) {
-            // Borrar imagen antigua físicamente del storage
-            if ($event->image_path) {
-                Storage::disk('public')->delete($event->image_path);
-            }
-            $data['image_path'] = $request->file('image')->store('events', 'public');
+            // ☁️ MAGIA DE CLOUDINARY: Subimos la nueva foto directo a la nube
+            $data['image_path'] = $request->file('image')->storeOnCloudinary('misutickets_events')->getSecurePath();
         }
 
         $event->update($data);
@@ -104,22 +102,20 @@ class EventController extends Controller
 
     public function destroy(Event $event)
     {
-        if ($event->image_path) {
-            Storage::disk('public')->delete($event->image_path);
-        }
-
+        // Ya no intentamos borrar la foto del disco local de tu PC porque está en la nube.
+        // Solo eliminamos el registro de la base de datos.
         $event->delete();
+        
         return redirect()->route('admin.events.index')->with('success', 'Evento eliminado de la base de datos.');
     }
 
     // Esta función es para la cartelera pública de Elías
-public function list()
-{
-    // Traemos todos los eventos publicados
-    $events = Event::where('status', 'Published')->latest()->get();
+    public function list()
+    {
+        // Traemos todos los eventos publicados
+        $events = Event::where('status', 'Published')->latest()->get();
 
-    // Enviamos los datos a la vista que modificamos antes
-    return view('events.index', compact('events'));
-}
-
+        // Enviamos los datos a la vista que modificamos antes
+        return view('events.index', compact('events'));
+    }
 }

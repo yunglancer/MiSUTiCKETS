@@ -55,7 +55,7 @@
             
             <div class="container mx-auto px-4 relative z-20 h-full flex flex-col justify-center max-w-4xl">
                 <span class="inline-block px-3 py-1 bg-[#FF6600] text-white text-xs font-black rounded mb-4 uppercase tracking-widest w-max shadow-md">
-                    MiSUTiCKETS Oficial
+                    MiSUTiCKETS
                 </span>
                 
                 <h1 class="text-5xl lg:text-7xl font-black text-white leading-tight mb-6">
@@ -99,7 +99,7 @@
                         <div class="group relative bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300 flex flex-col">
                             <div class="aspect-video relative overflow-hidden bg-slate-100">
                                 <img alt="{{ $event->title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                                     src="{{ $event->image_path ? asset('storage/' . $event->image_path) : 'https://placehold.co/600x400/0f172a/FFF?text=MiSUTiCKETS' }}" />
+     src="{{ $event->image_url }}" />
                                 <div class="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-4 py-1.5 rounded-full text-primary font-bold text-sm shadow-sm">
                                     {{ $event->category ? $event->category->name : 'General' }}
                                 </div>

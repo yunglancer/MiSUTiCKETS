@@ -41,13 +41,8 @@
                         <td class="px-8 py-5">
                             <div class="flex items-center gap-4">
                                 <div class="w-14 h-14 rounded-2xl overflow-hidden bg-slate-100 border-2 border-white shadow-sm flex-shrink-0 group-hover:shadow-md transition-all">
-                                    @if($event->image_path)
-                                        <img src="{{ asset('storage/' . $event->image_path) }}" class="w-full h-full object-cover">
-                                    @else
-                                        <div class="w-full h-full flex items-center justify-center text-slate-300">
-                                            <span class="material-icons text-xl">image_not_supported</span>
-                                        </div>
-                                    @endif
+                                    {{-- LA MAGIA DE CLOUDINARY EN 1 LÍNEA --}}
+                                    <img src="{{ $event->image_url }}" class="w-full h-full object-cover">
                                 </div>
                                 <div>
                                     <div class="text-[13px] font-black text-slate-800 leading-tight mb-1 flex items-center gap-2 uppercase tracking-tight">
