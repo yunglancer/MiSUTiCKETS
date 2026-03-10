@@ -30,6 +30,7 @@
                         <th class="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] border-b border-slate-100">Info. Evento</th>
                         <th class="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] border-b border-slate-100">Categoría / Lugar</th>
                         <th class="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] border-b border-slate-100">Programación</th>
+                        <th class="px-6 py-5 text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] border-b border-slate-100">Tickets & Precios</th>
                         <th class="px-6 py-5 text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] border-b border-slate-100">Estado</th>
                         <th class="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] border-b border-slate-100">Acciones</th>
                     </tr>
@@ -80,7 +81,25 @@
                             </div>
                         </td>
 
-                        {{-- Columna: Estado (Badges mejorados) --}}
+                        {{-- Zonas y Precios --}}
+                        <td class="px-6 py-5">
+                            <div class="flex flex-wrap gap-1.5 justify-center max-w-[250px] mx-auto">
+                                @forelse($event->eventZones as $zone)
+                                    <div class="bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg flex flex-col items-center min-w-[70px] hover:border-[#FF6600]/30 transition-colors">
+                                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">{{ $zone->venueZone->name }}</span>
+                                        <div class="flex items-baseline gap-0.5">
+                                            <span class="text-[9px] font-bold text-[#FF6600]">$</span>
+                                            <span class="text-[12px] font-black text-slate-800 tracking-tight">{{ number_format($zone->price, 0) }}</span>
+                                        </div>
+                                        <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{{ $zone->capacity }} cant.</span>
+                                    </div>
+                                @empty
+                                    <span class="text-[9px] font-bold text-slate-300 uppercase italic tracking-widest">Sin configurar</span>
+                                @endforelse
+                            </div>
+                        </td>
+
+                        {{-- Columna: Estado --}}
                         <td class="px-6 py-5 text-center">
                             @php
                                 $statusClasses = [
@@ -113,7 +132,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-24 text-center">
+                        <td colspan="6" class="px-6 py-24 text-center">
                             <div class="w-24 h-24 mx-auto bg-slate-50 rounded-[2.5rem] flex items-center justify-center mb-6">
                                 <span class="material-icons text-5xl text-slate-200">festival</span>
                             </div>
