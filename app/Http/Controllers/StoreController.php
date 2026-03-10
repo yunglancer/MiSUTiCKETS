@@ -37,7 +37,7 @@ class StoreController extends Controller
     // 3. EL DETALLE DEL EVENTO (/eventos/{id}) -> La misión de Jean
     public function show($id)
     {
-        $event = Event::with(['category', 'venue'])
+        $event = Event::with(['category', 'venue', 'tickets'])
                       ->where('status', 'Published')
                       ->findOrFail($id);
 
