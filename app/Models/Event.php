@@ -24,6 +24,11 @@ class Event extends Model
         return $this->hasMany(Ticket::class);
     }
 
+    // Relación de Ángel: Un evento tiene muchas zonas (VIP, General, etc.) con sus precios
+    public function eventZones()
+    {
+        return $this->hasMany(EventZone::class);
+    }
     /**
      * ACCESOR INTELIGENTE PARA LA IMAGEN (Cloudinary / Local / Fallback)
      * Se usa en las vistas llamando a: $event->image_url

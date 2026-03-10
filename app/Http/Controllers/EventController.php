@@ -5,16 +5,29 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\Category;
 use App\Models\Venue;    
-use App\Models\EventZone; // Asegúrate de tener este modelo creado
+use App\Models\EventZone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-// Quitamos el Facade Storage porque ahora usaremos la nube directamente
+use Illuminate\Support\Facades\DB;
+// IMPORTANTE: Importamos el SDK nativo de Cloudinary
+use Cloudinary\Cloudinary;
 
 class EventController extends Controller
 {
+    // Función privada para no repetir código de conexión
+    private function getCloudinaryInstance()
+    {
+        return new Cloudinary([
+            'cloud' => [
+                'cloud_name' => 'duw8vlhwx',
+                'api_key'    => '971486582559871',
+                'api_secret' => 'IWIQxbCjYBU0nAAs-xpMEDJgHBs',
+            ],
+        ]);
+    }
+
     public function index()
     {
-        // Cargamos relaciones para mostrar zonas y precios sin saturar la DB
         $events = Event::with(['category', 'venue', 'eventZones.venueZone'])
                         ->latest()
                         ->paginate(10);
@@ -31,15 +44,12 @@ class EventController extends Controller
 
     public function store(Request $request)
     {
-        // 1. Validación más permisiva para evitar el bucle de recarga
         $request->validate([
             'title' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'venue_id' => 'required|exists:venues,id',       
-            'event_date' => 'required', // Quitamos 'date' temporalmente para probar
+            'event_date' => 'required', 
             'status' => 'required',
-            // Cambiamos a nullable para que si Alpine no envía bien el array, 
-            // el error no te eche hacia atrás automáticamente
             'zones' => 'nullable|array', 
         ]);
 
@@ -48,10 +58,15 @@ class EventController extends Controller
                 
                 $imagePath = null;
                 if ($request->hasFile('image')) {
-                    $imagePath = $request->file('image')->store('events', 'public');
+                    // CONEXIÓN DIRECTA NATIVA
+                    $cloudinary = $this->getCloudinaryInstance();
+                    $upload = $cloudinary->uploadApi()->upload(
+                        $request->file('image')->getRealPath(),
+                        ['folder' => 'misutickets_events']
+                    );
+                    $imagePath = $upload['secure_url'];
                 }
 
-                // Crear el Evento
                 $event = Event::create([
                     'title' => $request->title,
                     'slug' => Str::slug($request->title) . '-' . time(),
@@ -64,10 +79,8 @@ class EventController extends Controller
                     'venue_id' => $request->venue_id,
                 ]);
 
-                // 2. Logica de guardado de zonas mejorada
                 if ($request->has('zones') && is_array($request->zones)) {
                     foreach ($request->zones as $zoneData) {
-                        // Verificamos que sea una zona activa y que tenga datos básicos
                         if (isset($zoneData['is_active']) && isset($zoneData['price'])) {
                             EventZone::create([
                                 'event_id' => $event->id,
@@ -80,11 +93,10 @@ class EventController extends Controller
                     }
                 }
 
-                return redirect()->route('admin.events.index')->with('success', 'Evento creado.');
+                return redirect()->route('admin.events.index')->with('success', 'Evento creado con éxito en la nube.');
             });
         } catch (\Exception $e) {
-            // Esto es vital: si falla, queremos ver POR QUÉ en la pantalla
-            dd($e->getMessage()); 
+            dd("Error en Store: " . $e->getMessage()); 
         }
     }
 
@@ -92,7 +104,6 @@ class EventController extends Controller
     {
         $categories = Category::all();
         $venues = Venue::all();
-        // Cargamos las zonas que ya tiene configuradas este evento
         $event->load('eventZones'); 
         return view('admin.events.edit', compact('event', 'categories', 'venues'));
     }
@@ -121,19 +132,19 @@ class EventController extends Controller
                     'slug' => Str::slug($request->title) . '-' . $event->id,
                 ];
 
-        if ($request->hasFile('image')) {
-            // Borrar imagen antigua físicamente del storage
-            if ($event->image_path) {
-                Storage::disk('public')->delete($event->image_path);
-            }
-            $data['image_path'] = $request->file('image')->store('events', 'public');
-        }
-
+                if ($request->hasFile('image')) {
+                    // CONEXIÓN DIRECTA NATIVA
+                    $cloudinary = $this->getCloudinaryInstance();
+                    $upload = $cloudinary->uploadApi()->upload(
+                        $request->file('image')->getRealPath(),
+                        ['folder' => 'misutickets_events']
+                    );
+                    $data['image_path'] = $upload['secure_url'];
+                }
+                
                 $event->update($data);
 
-                // Actualizar zonas si el formulario de edit también las incluye
                 if ($request->has('zones')) {
-                    // Estrategia: Sincronizar (Borrar y re-crear es lo más limpio aquí)
                     EventZone::where('event_id', $event->id)->delete();
                     foreach ($request->zones as $zoneData) {
                         if (isset($zoneData['is_active'])) {
@@ -151,22 +162,20 @@ class EventController extends Controller
                 return redirect()->route('admin.events.index')->with('success', '¡Evento actualizado correctamente!');
             });
         } catch (\Exception $e) {
-            return back()->withInput()->with('error', 'Error al actualizar: ' . $e->getMessage());
+            dd("Error en Update: " . $e->getMessage());
         }
     }
 
     public function destroy(Event $event)
     {
-        // Ya no intentamos borrar la foto del disco local de tu PC porque está en la nube.
-        // Solo eliminamos el registro de la base de datos.
         $event->delete();
-        
-        return redirect()->route('admin.events.index')->with('success', 'Evento eliminado de la base de datos.');
+        return redirect()->route('admin.events.index')->with('success', 'Evento eliminado.');
     }
 
     public function list()
     {
         $events = Event::where('status', 'Published')->latest()->get();
-        return view('events.index', compact('events'));
+        $categories = Category::all(); 
+        return view('events.index', compact('events', 'categories'));
     }
 }
