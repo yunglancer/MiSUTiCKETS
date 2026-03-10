@@ -22,4 +22,9 @@ class Event extends Model
     {
         return $this->hasMany(Ticket::class);
     }
+
+    public function eventZones()
+    {
+        return $this->hasMany(EventZone::class);
+    }
     }
