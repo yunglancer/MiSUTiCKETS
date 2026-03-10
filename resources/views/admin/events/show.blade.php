@@ -33,9 +33,9 @@
 
     <div class="relative w-full h-[60vh] flex items-end overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-t from-background-dark via-background-dark/40 to-transparent z-10"></div>
-        <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=2070" 
-             class="absolute inset-0 w-full h-full object-cover object-center scale-105" 
-             alt="Banner Evento">
+            <img src="{{ $event->image_url }}" 
+                class="absolute inset-0 w-full h-full object-cover object-center scale-105" 
+            alt="{{ $event->title }}">
         
         <div class="relative container mx-auto px-8 pb-16 z-20">
             <span class="inline-block px-3 py-1 bg-primary text-white text-xs font-bold rounded mb-4 uppercase tracking-widest">
