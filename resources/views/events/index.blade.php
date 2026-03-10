@@ -108,7 +108,7 @@
                         <div class="group flex flex-col h-full bg-white dark:bg-slate-800 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-700 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300">
                             <div class="aspect-[16/10] relative overflow-hidden">
                                 @if($event->image_path)
-                                    <img src="{{ $event->image_path) }}" 
+                                    <img src="{{ $event->image_path }}" 
                                          alt="{{ $event->title }}" 
                                          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                 @else
