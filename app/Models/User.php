@@ -59,4 +59,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Ticket::class);
     }
+
+    // Un usuario (organizador) puede tener muchos eventos
+    public function events()
+    {
+        return $this->hasMany(Event::class);
+    }
 }

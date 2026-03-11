@@ -52,8 +52,20 @@
                                             <span class="flex h-2 w-2 rounded-full bg-[#FF6600] animate-pulse" title="Destacado"></span>
                                         @endif
                                     </div>
-                                    <div class="flex items-center gap-2">
+                                    <div class="flex flex-wrap items-center gap-2">
                                         <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest bg-slate-50 px-2 py-0.5 rounded">#{{ $event->id }}</span>
+                                        
+                                        {{-- NUEVA ETIQUETA DE ORGANIZADOR --}}
+                                        {{-- El '??' evita que falle si es null --}}
+                                        <span class="text-[8px] font-black text-slate-500 uppercase tracking-tighter">
+                                            {{ $event->user->name ?? 'Sistema' }}
+                                        </span>
+                                        <div class="flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
+                                            <span class="material-icons text-[10px] text-[#FF6600]">person</span>
+                                            <span class="text-[8px] font-black text-slate-500 uppercase tracking-tighter">
+                                                {{ $event->user->name ?? 'Sistema' }}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -117,6 +129,12 @@
                         {{-- Columna: Acciones --}}
                         <td class="px-8 py-5 text-right">
                             <div class="flex justify-end gap-2">
+                                {{-- Botón de Métricas --}}
+                                <a href="{{ route('admin.events.show', $event->id) }}" 
+                                    class="w-9 h-9 rounded-xl bg-orange-50 text-[#FF6600] hover:bg-[#FF6600] hover:text-white flex items-center justify-center transition-all duration-300 border border-orange-100 shadow-sm"
+                                    title="Ver métricas y ventas">
+                                    <span class="material-icons text-base">analytics</span>
+                                </a>
                                 <a href="{{ route('admin.events.edit', $event->id) }}" class="p-2.5 rounded-xl bg-slate-50 text-slate-400 hover:bg-[#FF6600] hover:text-white transition-all duration-300 shadow-sm">
                                     <span class="material-icons text-[18px]">edit</span>
                                 </a>

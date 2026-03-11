@@ -10,9 +10,13 @@
             </h1>
             <p class="text-slate-500 text-[10px] uppercase tracking-widest font-bold mt-1">Gestión de locaciones y capacidad</p>
         </div>
+        
+        {{-- BLOQUEO 1: Solo el SuperAdmin ve el botón de creación --}}
+        @role('SuperAdmin')
         <a href="{{ route('admin.venues.create') }}" class="bg-[#FF6600] hover:bg-slate-900 text-white text-[10px] font-black py-4 px-8 rounded-2xl uppercase tracking-[0.2em] transition-all shadow-lg shadow-[#FF6600]/30 flex items-center gap-2">
             <span class="material-icons text-sm">add_location</span> Nuevo Recinto
         </a>
+        @endrole
     </div>
 
     {{-- Alerta de Éxito --}}
@@ -40,13 +44,16 @@
                         <th class="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] border-b border-slate-100">Ciudad</th>
                         <th class="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] border-b border-slate-100">Dirección</th>
                         <th class="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] border-b border-slate-100">Capacidad</th>
+                        
+                        {{-- BLOQUEO 2: La columna de cabecera de Acciones desaparece para el Organizador --}}
+                        @role('SuperAdmin')
                         <th class="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] border-b border-slate-100">Acciones</th>
+                        @endrole
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50">
                     @forelse($venues as $venue)
                     <tr class="hover:bg-slate-50/30 transition-all group">
-                        {{-- Nombre, Zonas e ID --}}
                         <td class="px-8 py-5">
                             <div class="flex items-center gap-4">
                                 <div class="w-11 h-11 rounded-[1.1rem] bg-orange-50 flex items-center justify-center transition-all duration-300 group-hover:scale-105">
@@ -54,8 +61,6 @@
                                 </div>
                                 <div>
                                     <div class="text-[13px] font-black text-slate-800 uppercase tracking-tight">{{ $venue->name }}</div>
-                                    
-                                    {{-- Listado de Zonas en Badges --}}
                                     <div class="flex flex-wrap gap-1 mt-1.5">
                                         @forelse($venue->zones as $zone)
                                             <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[8px] font-black uppercase tracking-tighter border border-slate-200/50">
@@ -65,7 +70,6 @@
                                             <span class="text-[8px] text-slate-400 italic font-bold uppercase tracking-widest">Sin zonas</span>
                                         @endforelse
                                     </div>
-
                                     <div class="text-[9px] text-slate-300 font-bold uppercase mt-1 tracking-widest">ID: #{{ $venue->id }}</div>
                                 </div>
                             </div>
@@ -89,7 +93,8 @@
                             </div>
                         </td>
 
-                        {{-- Botones de Accion --}}
+                        {{-- BLOQUEO 3: Los botones de edición y eliminación solo para el SuperAdmin --}}
+                        @role('SuperAdmin')
                         <td class="px-8 py-5 text-right">
                             <div class="flex justify-end gap-2">
                                 <a href="{{ route('admin.venues.edit', $venue->id) }}" 
@@ -107,10 +112,11 @@
                                 </form>
                             </div>
                         </td>
+                        @endrole
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-20 text-center">
+                        <td colspan="{{ auth()->user()->hasRole('SuperAdmin') ? 5 : 4 }}" class="px-6 py-20 text-center">
                             <div class="w-20 h-20 mx-auto bg-slate-50 rounded-[2rem] flex items-center justify-center mb-4 text-slate-200">
                                 <span class="material-icons text-4xl">location_off</span>
                             </div>
