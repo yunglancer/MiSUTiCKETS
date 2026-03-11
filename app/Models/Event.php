@@ -51,6 +51,11 @@ class Event extends Model
     public function eventZones() {
         return $this->hasMany(EventZone::class);
     }
+    // Relación: Un evento pertenece a un usuario (el creador/organizador)
+public function user()
+{
+    return $this->belongsTo(User::class);
+}
     /**
      * ACCESOR INTELIGENTE PARA LA IMAGEN (Cloudinary / Local / Fallback)
      * Se usa en las vistas llamando a: $event->image_url
