@@ -90,4 +90,24 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
 });
 
+// ==========================================
+// 🌐 5. INSTITUCIONAL, SOPORTE Y CONTACTO -> JEAN
+// ==========================================
+Route::controller(App\Http\Controllers\PageController::class)->group(function () {
+    
+    // Centro de Ayuda / FAQ
+    Route::get('/preguntas-frecuentes', 'faq')->name('pages.faq');
+    
+    // Formulario de Contacto
+    Route::get('/contacto', 'contact')->name('pages.contact');
+    Route::post('/contacto', 'sendContact')->name('pages.contact.send');
+    // Gracias / Pagina 
+    Route::get('/gracias', 'thanks')->name('pages.thanks');
+
+    // Páginas Legales
+    Route::get('/terminos-y-condiciones', 'terms')->name('pages.terms');
+    Route::get('/politicas-de-privacidad', 'privacy')->name('pages.privacy');
+    
+});
+
 require __DIR__.'/auth.php';
