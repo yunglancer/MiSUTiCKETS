@@ -11,13 +11,11 @@ use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
-// IMPORTANTE: Importamos el SDK nativo de Cloudinary
 use Cloudinary\Cloudinary;
 use Illuminate\Support\Facades\Auth;
 
 class EventController extends Controller
 {
-    // Función privada para no repetir código de conexión
     private function getCloudinaryInstance()
     {
         return new Cloudinary([
@@ -32,8 +30,6 @@ class EventController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
-        // Agregamos withCount para las barras de progreso que hicimos antes
         $query = Event::with(['category', 'venue', 'user'])
             ->withCount(['tickets as sold_tickets' => function($q) {
                 $q->whereHas('order', function($o) {
@@ -46,7 +42,6 @@ class EventController extends Controller
         }
 
         $events = $query->latest()->paginate(10);
-
         return view('admin.events.index', compact('events'));
     }
 
@@ -58,74 +53,67 @@ class EventController extends Controller
     }
 
     public function store(Request $request)
-{
-    $request->validate([
-        'title' => 'required|string|max:255',
-        'category_id' => 'required|exists:categories,id',
-        'venue_id' => 'required|exists:venues,id',       
-        'event_date' => 'required', 
-        'status' => 'required',
-        'zones' => 'nullable|array', 
-        'image' => 'nullable|image|max:10240', // Agregada validación de imagen
-    ]);
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'venue_id' => 'required|exists:venues,id',       
+            'event_date' => 'required', 
+            'status' => 'required',
+            'zones' => 'nullable|array', 
+            'image' => 'nullable|image|max:10240',
+        ]);
 
-    // Capturamos el ID fuera de la transacción para asegurar que no se pierda
-    $currentUserId = Auth::id();
+        $currentUserId = Auth::id();
 
-    try {
-        return DB::transaction(function () use ($request, $currentUserId) {
-            
-            $imagePath = null;
-            if ($request->hasFile('image')) {
-                $cloudinary = $this->getCloudinaryInstance();
-                $upload = $cloudinary->uploadApi()->upload(
-                    $request->file('image')->getRealPath(),
-                    ['folder' => 'misutickets_events']
-                );
-                $imagePath = $upload['secure_url'];
-            }
+        try {
+            return DB::transaction(function () use ($request, $currentUserId) {
+                $imagePath = null;
+                if ($request->hasFile('image')) {
+                    $cloudinary = $this->getCloudinaryInstance();
+                    $upload = $cloudinary->uploadApi()->upload(
+                        $request->file('image')->getRealPath(),
+                        ['folder' => 'misutickets_events']
+                    );
+                    $imagePath = $upload['secure_url'];
+                }
 
-            // Cambiamos Create por New + Save para forzar la asignación
-            $event = new Event();
-            $event->user_id = $currentUserId; // Asignación directa (Ignora el fillable)
-            $event->title = $request->title;
-            $event->slug = Str::slug($request->title) . '-' . time();
-            $event->description = $request->description;
-            $event->event_date = $request->event_date;
-            $event->image_path = $imagePath;
-            $event->is_featured = $request->has('is_featured');
-            $event->status = $request->status;
-            $event->category_id = $request->category_id;
-            $event->venue_id = $request->venue_id;
-            $event->save();
+                $event = new Event();
+                $event->user_id = $currentUserId;
+                $event->title = $request->title;
+                $event->slug = Str::slug($request->title) . '-' . time();
+                $event->description = $request->description;
+                $event->event_date = $request->event_date;
+                $event->image_path = $imagePath;
+                $event->is_featured = $request->has('is_featured');
+                $event->status = $request->status;
+                $event->category_id = $request->category_id;
+                $event->venue_id = $request->venue_id;
+                $event->save();
 
-            if ($request->has('zones') && is_array($request->zones)) {
-                foreach ($request->zones as $zoneData) {
-                    // Verificamos que venga el precio y el ID de la zona del recinto
-                    if (isset($zoneData['venue_zone_id']) && isset($zoneData['price'])) {
-                        EventZone::create([
-                            'event_id' => $event->id,
-                            'venue_zone_id' => $zoneData['venue_zone_id'],
-                            'price' => $zoneData['price'] ?? 0,
-                            'capacity' => $zoneData['capacity'] ?? 0,
-                            'is_active' => true,
-                        ]);
+                if ($request->has('zones') && is_array($request->zones)) {
+                    foreach ($request->zones as $zoneData) {
+                        if (isset($zoneData['venue_zone_id']) && isset($zoneData['price'])) {
+                            EventZone::create([
+                                'event_id' => $event->id,
+                                'venue_zone_id' => $zoneData['venue_zone_id'],
+                                'price' => $zoneData['price'] ?? 0,
+                                'capacity' => $zoneData['capacity'] ?? 0,
+                                'is_active' => true,
+                            ]);
+                        }
                     }
                 }
-            }
 
-            return redirect()->route('admin.events.index')
-                             ->with('success', '¡Evento creado con éxito!');
-        });
-    } catch (\Exception $e) {
-        // En producción cambia el dd() por un back() con error
-        return back()->withInput()->with('error', 'Error al crear evento: ' . $e->getMessage());
+                return redirect()->route('admin.events.index')->with('success', '¡Evento creado con éxito!');
+            });
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'Error al crear evento: ' . $e->getMessage());
+        }
     }
-}
 
     public function edit(Event $event)
     {
-        // Validamos que el usuario sea el dueño o sea SuperAdmin
         if (!auth()->user()->hasRole('SuperAdmin') && $event->user_id !== auth()->id()) {
             return abort(403, 'No tienes permiso para editar este evento.');
         }
@@ -161,7 +149,6 @@ class EventController extends Controller
                 ];
 
                 if ($request->hasFile('image')) {
-                    // CONEXIÓN DIRECTA NATIVA
                     $cloudinary = $this->getCloudinaryInstance();
                     $upload = $cloudinary->uploadApi()->upload(
                         $request->file('image')->getRealPath(),
@@ -196,7 +183,6 @@ class EventController extends Controller
 
     public function destroy(Event $event)
     {
-        // Validación de seguridad
         if (!auth()->user()->hasRole('SuperAdmin') && $event->user_id !== auth()->id()) {
             return abort(403, 'No tienes permiso para eliminar este evento.');
         }
@@ -205,20 +191,17 @@ class EventController extends Controller
         return redirect()->route('admin.events.index')->with('success', 'Evento eliminado.');
     }
 
+    // Muestra métricas en el ADMIN
     public function show(Event $event)
     {
         $user = auth()->user();
-
-        // Seguridad: El Organizador solo puede ver sus propios eventos
         if (!$user->hasRole('SuperAdmin') && $event->user_id !== $user->id) {
-            abort(403, 'No tienes permiso para ver las métricas de este evento.');
+            abort(403);
         }
 
-        // 1. Obtener todas las zonas del recinto del evento
-        // 2. Por cada zona, contar cuántos tickets se han generado (vendidos/pagados)
         $statsByZone = $event->venue->zones->map(function ($zone) use ($event) {
             $soldTickets = Ticket::where('event_id', $event->id)
-                                ->where('venue_zone_id', $zone->id) // <--- Verifica que este nombre coincida con tu tabla tickets
+                                ->where('venue_zone_id', $zone->id)
                                 ->whereHas('order', function($q) {
                                     $q->where('status', 'paid');
                                 })->count();
@@ -228,7 +211,7 @@ class EventController extends Controller
                 'capacity' => $zone->capacity,
                 'sold' => $soldTickets,
                 'percentage' => ($zone->capacity > 0) ? ($soldTickets * 100 / $zone->capacity) : 0,
-                'revenue' => $soldTickets * $zone->price // Asumiendo que el precio está en la zona o tabla pivot
+                'revenue' => $soldTickets * $zone->price 
             ];
         });
 
@@ -238,19 +221,24 @@ class EventController extends Controller
         return view('admin.events.metrics', compact('event', 'statsByZone', 'totalRevenue', 'totalSold'));
     }
 
+    // --- NUEVO: Muestra el detalle del evento al PÚBLICO ---
+    public function showPublic($id)
+    {
+        $event = Event::with(['venue.zones', 'category', 'eventZones'])->findOrFail($id);
+        return view('events.show', compact('event'));
+    }
+
+    // Lista eventos con FILTROS en el FRONT
     public function list(Request $request)
     {
-        // Iniciamos la consulta base con relaciones para optimizar carga
         $query = Event::with(['venue', 'category'])
                       ->where('status', 'Published');
 
-        // Filtrar por término de búsqueda (Input 'buscar')
         if ($request->filled('buscar')) {
             $buscar = $request->input('buscar');
             $query->where('title', 'LIKE', "%{$buscar}%");
         }
 
-        // Filtrar por categoría (Parámetro 'categoria' en URL)
         if ($request->filled('categoria')) {
             $categoriaNombre = $request->input('categoria');
             $query->whereHas('category', function($q) use ($categoriaNombre) {
