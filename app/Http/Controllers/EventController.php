@@ -31,16 +31,17 @@ class EventController extends Controller
 
     public function index()
     {
-
-        // 1. Iniciamos la consulta cargando las relaciones para evitar el error 'user'
-        $query = Event::with(['category', 'venue', 'eventZones.venueZone', 'user']);
-
-        // 2. Filtro de Seguridad:
-        // Usamos Auth::user() para verificar el rol de Spatie con seguridad
         $user = Auth::user();
+        
+        // Agregamos withCount para las barras de progreso que hicimos antes
+        $query = Event::with(['category', 'venue', 'user'])
+            ->withCount(['tickets as sold_tickets' => function($q) {
+                $q->whereHas('order', function($o) {
+                    $o->where('status', 'paid');
+                });
+            }]);
 
         if ($user && !$user->hasRole('SuperAdmin')) {
-            // Si no es SuperAdmin, solo ve sus propios eventos
             $query->where('user_id', Auth::id());
         }
 
@@ -57,63 +58,70 @@ class EventController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id',
-            'venue_id' => 'required|exists:venues,id',       
-            'event_date' => 'required', 
-            'status' => 'required',
-            'zones' => 'nullable|array', 
-        ]);
+{
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'category_id' => 'required|exists:categories,id',
+        'venue_id' => 'required|exists:venues,id',       
+        'event_date' => 'required', 
+        'status' => 'required',
+        'zones' => 'nullable|array', 
+        'image' => 'nullable|image|max:10240', // Agregada validación de imagen
+    ]);
 
-        try {
-            return DB::transaction(function () use ($request) {
-                
-                $imagePath = null;
-                if ($request->hasFile('image')) {
-                    // CONEXIÓN DIRECTA NATIVA
-                    $cloudinary = $this->getCloudinaryInstance();
-                    $upload = $cloudinary->uploadApi()->upload(
-                        $request->file('image')->getRealPath(),
-                        ['folder' => 'misutickets_events']
-                    );
-                    $imagePath = $upload['secure_url'];
-                }
+    // Capturamos el ID fuera de la transacción para asegurar que no se pierda
+    $currentUserId = Auth::id();
 
-                $event = Event::create([
-                    'user_id' => Auth::id(),
-                    'title' => $request->title,
-                    'slug' => Str::slug($request->title) . '-' . time(),
-                    'description' => $request->description,
-                    'event_date' => $request->event_date,
-                    'image_path' => $imagePath,
-                    'is_featured' => $request->has('is_featured'),
-                    'status' => $request->status,
-                    'category_id' => $request->category_id,
-                    'venue_id' => $request->venue_id,
-                ]);
+    try {
+        return DB::transaction(function () use ($request, $currentUserId) {
+            
+            $imagePath = null;
+            if ($request->hasFile('image')) {
+                $cloudinary = $this->getCloudinaryInstance();
+                $upload = $cloudinary->uploadApi()->upload(
+                    $request->file('image')->getRealPath(),
+                    ['folder' => 'misutickets_events']
+                );
+                $imagePath = $upload['secure_url'];
+            }
 
-                if ($request->has('zones') && is_array($request->zones)) {
-                    foreach ($request->zones as $zoneData) {
-                        if (isset($zoneData['is_active']) && isset($zoneData['price'])) {
-                            EventZone::create([
-                                'event_id' => $event->id,
-                                'venue_zone_id' => $zoneData['venue_zone_id'],
-                                'price' => $zoneData['price'] ?? 0,
-                                'capacity' => $zoneData['capacity'] ?? 0,
-                                'is_active' => true,
-                            ]);
-                        }
+            // Cambiamos Create por New + Save para forzar la asignación
+            $event = new Event();
+            $event->user_id = $currentUserId; // Asignación directa (Ignora el fillable)
+            $event->title = $request->title;
+            $event->slug = Str::slug($request->title) . '-' . time();
+            $event->description = $request->description;
+            $event->event_date = $request->event_date;
+            $event->image_path = $imagePath;
+            $event->is_featured = $request->has('is_featured');
+            $event->status = $request->status;
+            $event->category_id = $request->category_id;
+            $event->venue_id = $request->venue_id;
+            $event->save();
+
+            if ($request->has('zones') && is_array($request->zones)) {
+                foreach ($request->zones as $zoneData) {
+                    // Verificamos que venga el precio y el ID de la zona del recinto
+                    if (isset($zoneData['venue_zone_id']) && isset($zoneData['price'])) {
+                        EventZone::create([
+                            'event_id' => $event->id,
+                            'venue_zone_id' => $zoneData['venue_zone_id'],
+                            'price' => $zoneData['price'] ?? 0,
+                            'capacity' => $zoneData['capacity'] ?? 0,
+                            'is_active' => true,
+                        ]);
                     }
                 }
+            }
 
-                return redirect()->route('admin.events.index')->with('success', 'Evento creado con éxito en la nube.');
-            });
-        } catch (\Exception $e) {
-            dd("Error en Store: " . $e->getMessage()); 
-        }
+            return redirect()->route('admin.events.index')
+                             ->with('success', '¡Evento creado con éxito!');
+        });
+    } catch (\Exception $e) {
+        // En producción cambia el dd() por un back() con error
+        return back()->withInput()->with('error', 'Error al crear evento: ' . $e->getMessage());
     }
+}
 
     public function edit(Event $event)
     {
@@ -210,10 +218,10 @@ class EventController extends Controller
         // 2. Por cada zona, contar cuántos tickets se han generado (vendidos/pagados)
         $statsByZone = $event->venue->zones->map(function ($zone) use ($event) {
             $soldTickets = Ticket::where('event_id', $event->id)
-                        ->where('event_zone_id', $zone->id)
-                        ->whereHas('order', function($q) {
-                            $q->where('status', 'paid');
-                        })->count();
+                                ->where('venue_zone_id', $zone->id) // <--- Verifica que este nombre coincida con tu tabla tickets
+                                ->whereHas('order', function($q) {
+                                    $q->where('status', 'paid');
+                                })->count();
 
             return [
                 'name' => $zone->name,
