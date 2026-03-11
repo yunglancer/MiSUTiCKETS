@@ -93,13 +93,28 @@
                     <span class="text-xs uppercase tracking-widest font-bold text-slate-400 group-hover:text-white">Seguridad</span>
                 </a>
             </li>
-
+            
             <li>
                 <a href="#" class="flex items-center gap-3 py-3 px-4 rounded-2xl transition-all duration-200 hover:bg-slate-800 hover:text-white group">
                     <span class="material-icons text-lg text-slate-500 group-hover:text-white transition-colors">support_agent</span>
                     <span class="text-xs uppercase tracking-widest font-bold text-slate-400 group-hover:text-white">Soporte</span>
                 </a>
             </li>
+
+            {{-- Sección de Administración Avanzada --}}
+            @role('SuperAdmin')
+                <div class="mt-10 mb-4 px-6">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Configuración Pro</span>
+                </div>
+
+                <a href="{{ route('admin.users.index') }}" 
+                class="flex items-center gap-3 px-6 py-4 rounded-2xl transition-all duration-300 {{ request()->routeIs('admin.users.*') ? 'bg-[#FF6600] text-white shadow-lg shadow-[#FF6600]/20' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900' }}">
+                    <span class="material-icons text-[20px]">shield</span>
+                    <span class="text-[11px] font-black uppercase tracking-widest">Seguridad y Roles</span>
+                </a>
+
+                {{-- Puedes añadir aquí otros links de SuperAdmin como Ajustes Globales o Reportes --}}
+            @endrole
         </ul>
 
         <div class="p-4 border-t border-slate-800">

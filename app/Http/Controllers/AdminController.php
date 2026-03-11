@@ -13,14 +13,42 @@ class AdminController extends Controller
 {
     public function dashboard()
     {
-        // 1. Calculamos los ingresos sumando solo lo que está marcado como 'paid'
-        $totalRevenue = Order::where('status', 'paid')->sum('total_amount');
-        
-        // 2. Variable para la vista (mantenemos el nombre que pide tu dashboard.blade)
-        $ticketsSold = Ticket::count(); 
-        
-        $activeEvents = Event::where('status', 'Published')->count();
-        $recentOrders = Order::with('user')->latest()->take(5)->get();
+        $user = auth()->user();
+    
+        // 1. Definimos las consultas base
+        $revenueQuery = Order::where('status', 'paid');
+        $ticketsQuery = Ticket::query();
+        $eventsQuery = Event::where('status', 'Published');
+        $ordersQuery = Order::with('user');
+
+        // 2. FILTRO DE SEGURIDAD: Si NO es SuperAdmin, filtramos por sus eventos
+        if (!$user->hasRole('SuperAdmin')) {
+            $userId = $user->id;
+
+            // Ingresos: Solo de órdenes que tengan tickets de sus eventos
+            $revenueQuery->whereHas('tickets.event', function($q) use ($userId) {
+                $q->where('user_id', $userId);
+            });
+
+            // Tickets: Solo los emitidos para sus eventos
+            $ticketsQuery->whereHas('event', function($q) use ($userId) {
+                $q->where('user_id', $userId);
+            });
+
+            // Eventos: Solo los que él creó
+            $eventsQuery->where('user_id', $userId);
+
+            // Órdenes Recientes: Solo las que contienen tickets de sus eventos
+            $ordersQuery->whereHas('tickets.event', function($q) use ($userId) {
+                $q->where('user_id', $userId);
+            });
+        }
+
+        // 3. Ejecutamos los cálculos
+        $totalRevenue = $revenueQuery->sum('total_amount');
+        $ticketsSold  = $ticketsQuery->count();
+        $activeEvents = $eventsQuery->count();
+        $recentOrders = $ordersQuery->latest()->take(5)->get();
 
         return view('admin.dashboard', [
             'totalRevenue' => $totalRevenue,

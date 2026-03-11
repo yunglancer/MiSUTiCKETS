@@ -6,11 +6,14 @@ use App\Models\Event;
 use App\Models\Category;
 use App\Models\Venue;    
 use App\Models\EventZone;
+use App\Models\Ticket;
+use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 // IMPORTANTE: Importamos el SDK nativo de Cloudinary
 use Cloudinary\Cloudinary;
+use Illuminate\Support\Facades\Auth;
 
 class EventController extends Controller
 {
@@ -28,10 +31,21 @@ class EventController extends Controller
 
     public function index()
     {
-        $events = Event::with(['category', 'venue', 'eventZones.venueZone'])
-                        ->latest()
-                        ->paginate(10);
-                        
+
+        // 1. Iniciamos la consulta cargando las relaciones para evitar el error 'user'
+        $query = Event::with(['category', 'venue', 'eventZones.venueZone', 'user']);
+
+        // 2. Filtro de Seguridad:
+        // Usamos Auth::user() para verificar el rol de Spatie con seguridad
+        $user = Auth::user();
+
+        if ($user && !$user->hasRole('SuperAdmin')) {
+            // Si no es SuperAdmin, solo ve sus propios eventos
+            $query->where('user_id', Auth::id());
+        }
+
+        $events = $query->latest()->paginate(10);
+
         return view('admin.events.index', compact('events'));
     }
 
@@ -68,6 +82,7 @@ class EventController extends Controller
                 }
 
                 $event = Event::create([
+                    'user_id' => Auth::id(),
                     'title' => $request->title,
                     'slug' => Str::slug($request->title) . '-' . time(),
                     'description' => $request->description,
@@ -102,6 +117,11 @@ class EventController extends Controller
 
     public function edit(Event $event)
     {
+        // Validamos que el usuario sea el dueño o sea SuperAdmin
+        if (!auth()->user()->hasRole('SuperAdmin') && $event->user_id !== auth()->id()) {
+            return abort(403, 'No tienes permiso para editar este evento.');
+        }
+
         $categories = Category::all();
         $venues = Venue::all();
         $event->load('eventZones'); 
@@ -168,8 +188,46 @@ class EventController extends Controller
 
     public function destroy(Event $event)
     {
+        // Validación de seguridad
+        if (!auth()->user()->hasRole('SuperAdmin') && $event->user_id !== auth()->id()) {
+            return abort(403, 'No tienes permiso para eliminar este evento.');
+        }
+
         $event->delete();
         return redirect()->route('admin.events.index')->with('success', 'Evento eliminado.');
+    }
+
+    public function show(Event $event)
+    {
+        $user = auth()->user();
+
+        // Seguridad: El Organizador solo puede ver sus propios eventos
+        if (!$user->hasRole('SuperAdmin') && $event->user_id !== $user->id) {
+            abort(403, 'No tienes permiso para ver las métricas de este evento.');
+        }
+
+        // 1. Obtener todas las zonas del recinto del evento
+        // 2. Por cada zona, contar cuántos tickets se han generado (vendidos/pagados)
+        $statsByZone = $event->venue->zones->map(function ($zone) use ($event) {
+            $soldTickets = Ticket::where('event_id', $event->id)
+                        ->where('event_zone_id', $zone->id)
+                        ->whereHas('order', function($q) {
+                            $q->where('status', 'paid');
+                        })->count();
+
+            return [
+                'name' => $zone->name,
+                'capacity' => $zone->capacity,
+                'sold' => $soldTickets,
+                'percentage' => ($zone->capacity > 0) ? ($soldTickets * 100 / $zone->capacity) : 0,
+                'revenue' => $soldTickets * $zone->price // Asumiendo que el precio está en la zona o tabla pivot
+            ];
+        });
+
+        $totalRevenue = $statsByZone->sum('revenue');
+        $totalSold = $statsByZone->sum('sold');
+
+        return view('admin.events.metrics', compact('event', 'statsByZone', 'totalRevenue', 'totalSold'));
     }
 
     public function list(Request $request)
