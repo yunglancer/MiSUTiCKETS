@@ -172,10 +172,29 @@ class EventController extends Controller
         return redirect()->route('admin.events.index')->with('success', 'Evento eliminado.');
     }
 
-    public function list()
+    public function list(Request $request)
     {
-        $events = Event::where('status', 'Published')->latest()->get();
+        // Iniciamos la consulta base con relaciones para optimizar carga
+        $query = Event::with(['venue', 'category'])
+                      ->where('status', 'Published');
+
+        // Filtrar por término de búsqueda (Input 'buscar')
+        if ($request->filled('buscar')) {
+            $buscar = $request->input('buscar');
+            $query->where('title', 'LIKE', "%{$buscar}%");
+        }
+
+        // Filtrar por categoría (Parámetro 'categoria' en URL)
+        if ($request->filled('categoria')) {
+            $categoriaNombre = $request->input('categoria');
+            $query->whereHas('category', function($q) use ($categoriaNombre) {
+                $q->where('name', $categoriaNombre);
+            });
+        }
+
+        $events = $query->latest()->get();
         $categories = Category::all(); 
+        
         return view('events.index', compact('events', 'categories'));
     }
 }

@@ -10,7 +10,12 @@ class Ticket extends Model
     use HasFactory;
 
     protected $fillable = [
-        'order_id', 'user_id', 'event_id', 'ticket_code', 'status'
+        'order_id',
+        'user_id',
+        'event_id',
+        'event_zone_id', // <--- ¡Asegúrate de que este exista!
+        'ticket_code',
+        'status',
     ];
 
     // Un ticket pertenece a una orden
@@ -29,5 +34,12 @@ class Ticket extends Model
     public function event()
     {
         return $this->belongsTo(Event::class); // Asegúrate de que el modelo Event exista
+    }
+    /**
+     * Relación: Un ticket pertenece a una Zona de Evento específica.
+     */
+    public function eventZone()
+    {
+        return $this->belongsTo(EventZone::class);
     }
 }

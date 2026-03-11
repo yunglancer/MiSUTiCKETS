@@ -77,12 +77,15 @@
                 </a>
             </li>
 
-            <li>
-                <a href="#" class="flex items-center gap-3 py-3 px-4 rounded-2xl transition-all duration-200 hover:bg-slate-800 hover:text-white group">
-                    <span class="material-icons text-lg text-slate-500 group-hover:text-white transition-colors">receipt_long</span>
-                    <span class="text-xs uppercase tracking-widest font-bold text-slate-400 group-hover:text-white">Ventas</span>
-                </a>
-            </li>
+            {{-- Taquilla Virtual (Pagos Pendientes) --}}
+@php $isOrders = request()->routeIs('admin.orders.*'); @endphp
+<li>
+    <a href="{{ route('admin.orders.pending') }}" 
+       class="flex items-center gap-3 py-3 px-4 rounded-2xl transition-all duration-200 group {{ $isOrders ? 'bg-[#FF6600]/10 text-[#FF6600]' : 'hover:bg-slate-800 hover:text-white' }}">
+        <span class="material-icons text-lg {{ $isOrders ? 'text-[#FF6600]' : 'text-slate-500 group-hover:text-white transition-colors' }}">payments</span>
+        <span class="text-xs uppercase tracking-widest font-bold {{ $isOrders ? 'text-[#FF6600]' : 'text-slate-400 group-hover:text-white' }}">Taquilla Virtual</span>
+    </a>
+</li>
 
             <li>
                 <a href="#" class="flex items-center gap-3 py-3 px-4 rounded-2xl transition-all duration-200 hover:bg-slate-800 hover:text-white group">

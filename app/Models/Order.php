@@ -11,8 +11,13 @@ class Order extends Model
 
     // Los campos que podemos guardar
     protected $fillable = [
-        'user_id', 'order_number', 'total_amount', 'status', 'payment_method', 'payment_reference'
-    ];
+    'user_id',
+    'order_number',
+    'total_amount',
+    'status', // <--- ¡ESTE DEBE ESTAR AQUÍ!
+    'payment_method',
+    'payment_reference',
+];
 
     // Una orden pertenece a un usuario
     public function user()
