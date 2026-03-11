@@ -10,10 +10,14 @@
             </span>
         </a>
 
-        <div class="relative hidden lg:block">
+        <form action="{{ route('events.index') }}" method="GET" class="relative hidden lg:block">
             <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
-            <input type="text" placeholder="Buscar eventos..." class="w-64 pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-[#FF6B00] outline-none transition-all">
-        </div>
+            <input type="text" 
+                   name="buscar" 
+                   value="{{ request('buscar') }}" 
+                   placeholder="Buscar eventos..." 
+                   class="w-64 pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-[#FF6B00] outline-none transition-all">
+        </form>
 
         <div class="flex items-center gap-4">
             

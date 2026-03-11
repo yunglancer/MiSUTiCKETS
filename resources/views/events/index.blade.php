@@ -88,17 +88,35 @@
             <div class="container mx-auto px-4">
                 
                 <div class="flex flex-col lg:flex-row gap-6 mb-20 justify-between items-center">
-                    <div class="w-full lg:w-1/2 relative flex items-center group">
+                    <form action="{{ route('events.index') }}" method="GET" class="w-full lg:w-1/2 relative flex items-center group">
                         <span class="material-icons absolute left-5 text-slate-400 group-focus-within:text-primary transition-colors" style="font-size: 20px;">search</span>
-                        <input type="text" placeholder="¿Qué evento buscas? (Ej: Concierto de Rock...)" 
+                        <input type="text" 
+                               name="buscar" 
+                               value="{{ request('buscar') }}"
+                               placeholder="¿Qué evento buscas? (Ej: Concierto de Rock...)" 
                                class="search-custom-focus w-full pl-12 pr-6 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-full focus:ring-4 text-slate-900 dark:text-white shadow-inner transition-all">
-                    </div>
+                    </form>
 
                     <div class="flex gap-3 overflow-x-auto pb-2 w-full lg:w-auto">
-                        <button class="px-7 py-3.5 bg-slate-900 dark:bg-primary text-white font-bold rounded-full text-sm shadow-lg transition-transform active:scale-95">Todos</button>
-                        <button class="btn-filter-custom px-7 py-3.5 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-full text-sm border border-slate-200 transition-all active:scale-95">Conciertos</button>
-                        <button class="btn-filter-custom px-7 py-3.5 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-full text-sm border border-slate-200 transition-all active:scale-95">Teatro</button>
-                        <button class="btn-filter-custom px-7 py-3.5 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-full text-sm border border-slate-200 transition-all active:scale-95">Deportes</button>
+                        <a href="{{ route('events.index') }}" 
+                           class="px-7 py-3.5 {{ !request('categoria') ? 'bg-slate-900 text-white' : 'bg-white text-slate-900 border border-slate-200 hover:bg-slate-900 hover:text-white' }} font-bold rounded-full text-sm shadow-sm transition-all active:scale-95 flex items-center justify-center">
+                            Todos
+                        </a>
+                        
+                        <a href="{{ route('events.index', ['categoria' => 'Conciertos']) }}" 
+                           class="btn-filter-custom px-7 py-3.5 {{ request('categoria') == 'Conciertos' ? 'bg-primary text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300' }} font-bold rounded-full text-sm border border-slate-200 transition-all active:scale-95 flex items-center justify-center">
+                            Conciertos
+                        </a>
+                        
+                        <a href="{{ route('events.index', ['categoria' => 'Teatro']) }}" 
+                           class="btn-filter-custom px-7 py-3.5 {{ request('categoria') == 'Teatro' ? 'bg-primary text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300' }} font-bold rounded-full text-sm border border-slate-200 transition-all active:scale-95 flex items-center justify-center">
+                            Teatro
+                        </a>
+                        
+                        <a href="{{ route('events.index', ['categoria' => 'Deportes']) }}" 
+                           class="btn-filter-custom px-7 py-3.5 {{ request('categoria') == 'Deportes' ? 'bg-primary text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300' }} font-bold rounded-full text-sm border border-slate-200 transition-all active:scale-95 flex items-center justify-center">
+                            Deportes
+                        </a>
                     </div>
                 </div>
 
@@ -116,7 +134,6 @@
                                          alt="Default" 
                                          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                 @endif
-                                <div class="absolute top-5 right-5 bg-white/95 backdrop-blur-sm px-5 py-2 rounded-2xl text-primary font-bold text-sm shadow-sm">Desde $25</div>
                             </div>
                             <div class="p-8 flex-grow flex flex-col justify-between">
                                 <div class="flex gap-4">
