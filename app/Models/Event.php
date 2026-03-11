@@ -6,8 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Event extends Model
 {
-    protected $fillable = ['category_id', 'venue_id', 'title', 'slug', 'description', 'image_path', 'event_date', 'is_featured', 'status'];
-
+    protected $fillable = ['user_id', 'category_id', 'venue_id', 'title', 'slug', 'description', 'image_path', 'event_date', 'is_featured', 'status'];
+    
+    // Un evento pertenece a un organizador (Usuario)
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
+    }
     // Relación: Un evento pertenece a una categoría
     public function category() {
         return $this->belongsTo(Category::class);
@@ -48,4 +53,5 @@ class Event extends Model
         // 3. Si es una imagen vieja guardada en el disco duro local
         return asset('storage/' . $this->image_path);
     }
+    
 }
