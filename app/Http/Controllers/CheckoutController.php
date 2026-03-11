@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\Ticket;
@@ -18,7 +19,6 @@ class CheckoutController extends Controller
     // =========================================================================
     public function show(Event $event)
     {
-        // Cargamos el evento junto con sus zonas para no saturar la base de datos
         $event->load('eventZones.venueZone');
         return view('client.checkout', compact('event'));
     }
@@ -28,11 +28,25 @@ class CheckoutController extends Controller
     // =========================================================================
     public function summary(Request $request)
     {
-        // Validamos que envíen el ID del evento y el array de tickets
+        // 🛡️ CAPA DE SEGURIDAD PREVENTIVA: 
+        // No dejamos que el usuario entre al carrito si ya tiene una orden pendiente.
+        $ordenPendiente = Order::where('user_id', Auth::id())
+                               ->where('status', 'pending')
+                               ->first();
+
+        if ($ordenPendiente) {
+            return redirect()->route('checkout.show', $request->event_id)
+                             ->with('error', "No puedes iniciar una nueva compra porque ya tienes la Orden #{$ordenPendiente->order_number} pendiente de pago.");
+        }
         $request->validate([
             'event_id' => 'required|exists:events,id',
             'tickets' => 'required|array',
-        ]);
+          // 🛑 CAPA DE SEGURIDAD 2: Referencia única en toda la tabla 'orders'
+    'payment_reference' => 'nullable|string|unique:orders,payment_reference',
+], [
+    // Mensaje de error personalizado para que el cliente entienda
+    'payment_reference.unique' => '¡Alerta! Este número de referencia ya fue utilizado en otra compra. Si crees que es un error, contáctanos.'
+]);
 
         $event = Event::with('eventZones.venueZone')->findOrFail($request->event_id);
         
@@ -40,18 +54,15 @@ class CheckoutController extends Controller
         $subtotal = 0;
         $totalTickets = 0;
 
-        // Recorremos el array de tickets [zone_id => cantidad]
         foreach ($request->tickets as $zoneId => $quantity) {
             if ($quantity > 0) {
                 $zone = $event->eventZones->where('id', $zoneId)->first();
                 
-                // Validamos que la zona exista y tenga suficiente capacidad
                 if ($zone && $zone->capacity >= $quantity) {
                     $itemTotal = $zone->price * $quantity;
                     $subtotal += $itemTotal;
                     $totalTickets += $quantity;
                     
-                    // Guardamos la info estructurada para la vista
                     $cartItems[] = [
                         'zone_id' => $zone->id,
                         'name' => $zone->venueZone->name ?? 'Zona General',
@@ -63,31 +74,51 @@ class CheckoutController extends Controller
             }
         }
 
-        // Si manipularon el HTML y no seleccionaron nada
         if ($totalTickets == 0) {
             return back()->with('error', 'Debes seleccionar al menos una entrada.');
         }
 
-        // LÓGICA DE NEGOCIO: Impuestos y Fees (Ejemplo: 10% de fee de plataforma)
         $platformFee = $subtotal * 0.10; 
         $grandTotal = $subtotal + $platformFee;
 
-        // Mandamos los datos a la nueva vista de resumen
         return view('client.summary', compact('event', 'cartItems', 'subtotal', 'platformFee', 'grandTotal', 'totalTickets'));
     }
 
     // =========================================================================
     // 3. EL BÚNKER: PROCESA LA COMPRA EN LA BASE DE DATOS (Paso 3)
     // =========================================================================
+    // =========================================================================
+    // 3. EL BÚNKER: PROCESA LA COMPRA EN LA BASE DE DATOS (Paso 3)
+    // =========================================================================
     public function process(Request $request)
     {
-        // Validamos la petición final
-        $request->validate([
+        // 🛑 CAPA DE SEGURIDAD 1: Bloquear múltiples órdenes pendientes
+        $ordenPendiente = Order::where('user_id', Auth::id())
+                                   ->where('status', 'pending')
+                                   ->first();
+
+        if ($ordenPendiente) {
+            // 🚨 CAMBIO CLAVE: Redirigimos explícitamente al evento, nunca usamos back()
+            return redirect()->route('checkout.show', $request->event_id)
+                             ->with('error', "Ya tienes la Orden #{$ordenPendiente->order_number} en espera de pago. Por favor transfiere y notifica, o espera a que caduque para intentar de nuevo.");
+        }
+
+        // 🛑 CAPA DE SEGURIDAD 2: Validación manual antifraude
+        // Usamos Validator::make en lugar de $request->validate() para que no haga back() automático
+        $validator = Validator::make($request->all(), [
             'event_id' => 'required|exists:events,id',
-            'cart_items' => 'required|string', // Lo recibiremos como JSON desde la vista summary
+            'cart_items' => 'required|string', 
             'payment_method' => 'required|string',
-            'payment_reference' => 'required|string',
+            'payment_reference' => 'required|string|unique:orders,payment_reference',
+        ], [
+            'payment_reference.unique' => '¡Alerta! Este número de referencia ya fue registrado en nuestro sistema. Revisa tus datos o contáctanos si crees que es un error.'
         ]);
+
+        // 🚨 CAMBIO CLAVE: Si hay un error (ej. referencia repetida o campo vacío), lo mandamos al evento
+        if ($validator->fails()) {
+            return redirect()->route('checkout.show', $request->event_id)
+                             ->with('error', $validator->errors()->first());
+        }
 
         try {
             DB::beginTransaction();
@@ -97,14 +128,12 @@ class CheckoutController extends Controller
             $subtotal = 0;
             $lockedZones = [];
 
-            // 1. RECALCULAMOS TOTALES Y BLOQUEAMOS LAS FILAS (Para evitar sobreventas)
+            // 1. RECALCULAMOS TOTALES Y BLOQUEAMOS LAS FILAS
             foreach ($cartItems as $item) {
-                // lockForUpdate() bloquea la fila en Aiven hasta que termine la transacción
                 $zone = EventZone::where('id', $item['zone_id'])
                                 ->lockForUpdate()
                                 ->firstOrFail();
                 
-                // Doble chequeo de capacidad en tiempo real
                 if ($zone->capacity < $item['quantity']) {
                     throw new \Exception("Lo sentimos, la zona {$item['name']} ya no tiene suficientes entradas disponibles.");
                 }
@@ -120,11 +149,11 @@ class CheckoutController extends Controller
             $platformFee = $subtotal * 0.10;
             $grandTotal = $subtotal + $platformFee;
 
-            // 2. CREAMOS LA ORDEN (Factura)
+            // 2. CREAMOS LA ORDEN
             $order = Order::create([
                 'user_id' => $user->id,
                 'order_number' => 'MISU-' . strtoupper(Str::random(8)),
-                'total_amount' => $grandTotal, // NUNCA confiamos en el front, usamos el cálculo del backend
+                'total_amount' => $grandTotal, 
                 'status' => 'pending', 
                 'payment_method' => $request->payment_method,
                 'payment_reference' => $request->payment_reference,
@@ -139,11 +168,10 @@ class CheckoutController extends Controller
                         'event_id' => $request->event_id,
                         'event_zone_id' => $lz['zone_id'], 
                         'ticket_code' => Str::uuid(),
-                        'status' => 'active', // <--- ¡AQUÍ ESTABA EL BUG! Debe decir 'active'
+                        'status' => 'active', 
                     ]);
                 }
                 
-                // Descontamos la capacidad real de la zona
                 $lz['model']->decrement('capacity', $lz['quantity']);
             }
 
@@ -152,7 +180,6 @@ class CheckoutController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            // Regresamos al cliente a la página anterior con el mensaje de error normal
             return redirect()->route('checkout.show', $request->event_id)->with('error', 'Hubo un problema: ' . $e->getMessage());
         }
     }

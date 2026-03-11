@@ -10,6 +10,17 @@
                     <span class="material-icons text-[#FF6600] text-4xl">local_activity</span>
                     Selecciona tus <span class="text-[#FF6600]">Entradas</span>
                 </h1>
+                @if(session('error'))
+    <div class="mb-6 animate-in fade-in slide-in-from-top-4 duration-300">
+        <div class="bg-rose-50 border-l-4 border-rose-500 p-4 rounded-2xl flex items-center gap-3 shadow-lg shadow-rose-200/50">
+            <span class="material-icons text-rose-500">error_outline</span>
+            <div>
+                <p class="text-rose-900 font-black text-[10px] uppercase tracking-[0.2em]">¡Acceso Restringido!</p>
+                <p class="text-rose-700 text-xs font-bold">{{ session('error') }}</p>
+            </div>
+        </div>
+    </div>
+@endif
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">

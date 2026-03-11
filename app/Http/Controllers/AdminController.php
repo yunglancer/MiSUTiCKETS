@@ -36,18 +36,21 @@ class AdminController extends Controller
         return view('admin.tickets.verify', compact('ticket'));
     }
 
-    public function markTicketAsUsed($id)
-    {
-        $ticket = Ticket::findOrFail($id);
+public function markTicketAsUsed($id)
+{
+    $ticket = Ticket::findOrFail($id);
 
-        if ($ticket->status === 'used') {
-            return back()->with('error', '¡ALERTA! Esta entrada ya fue utilizada anteriormente.');
-        }
-
-        $ticket->update(['status' => 'used']);
-        return back()->with('success', '¡Entrada validada correctamente! El cliente puede pasar.');
+    if ($ticket->status === 'used') {
+        return response()->json(['success' => false, 'message' => '¡ALERTA! Esta entrada ya fue usada.'], 422);
     }
 
+    $ticket->update([
+        'status' => 'used',
+        'validated_at' => now(), // Guardamos la hora exacta de entrada
+    ]);
+
+    return response()->json(['success' => true, 'message' => 'Entrada validada. ¡Bienvenidos a MiSUJEVA!']);
+}
     public function pendingOrders()
     {
         $orders = Order::with('user')
