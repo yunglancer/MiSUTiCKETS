@@ -11,7 +11,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\VenueController;
 use App\Http\Controllers\CategoryController;
 
-// Prueba ultra simple (Puedes borrarla después)
+// Prueba ultra simple
 Route::get('/vitrina', function () {
     return view('admin.events.show', ['nombreEvento' => 'Evento de Prueba']);
 });
@@ -19,50 +19,29 @@ Route::get('/vitrina', function () {
 // ==========================================
 // 🌍 1. RUTAS FRONT OFFICE (Públicas) -> JEAN / ELÍAS
 // ==========================================
-
-// La Landing Page (welcome)
 Route::get('/', [StoreController::class, 'landing'])->name('home');
-
-// El Catálogo Completo
-// MODIFICACIÓN REALIZADA: Ahora apunta a EventController@list para que funcionen los filtros
-Route::get('/eventos', [EventController::class, 'list'])->name('events.index');
-
-// El Detalle del Evento
-// Modificación: Esta ruta llamará a la función 'show' en StoreController
+Route::get('/eventos', [StoreController::class, 'index'])->name('events.index');
 Route::get('/eventos/{id}', [StoreController::class, 'show'])->name('events.show');
 
 
 // ==========================================
 // 🏢 2. RUTAS BACK OFFICE (Panel de Admin) -> ÁNGEL / LUIS
 // ==========================================
-// NOTA: Todo este grupo está protegido. Solo entran usuarios logueados que sean SuperAdmin u Organizador.
-
-// ==========================================
-// 🏢 2. RUTAS BACK OFFICE (Panel de Admin) -> ÁNGEL / LUIS
-// ==========================================
 Route::middleware(['auth', 'role:SuperAdmin|Organizador'])->prefix('admin')->name('admin.')->group(function () {
-    
-    // Dashboard principal
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
-
-    // CRUDs de Ángel
     Route::resource('events', EventController::class);
     Route::resource('venues', VenueController::class);
     Route::resource('categories', CategoryController::class);
-
-    // Ruta AJAX para zonas
     Route::get('venues/{venue}/zones-list', [VenueController::class, 'getZones'])->name('venues.zones');
-
-    // Escáner y Verificación de Tickets
     Route::get('/tickets/{id}/verify', [AdminController::class, 'verifyTicket'])->name('tickets.verify');
     Route::post('/tickets/{id}/mark-used', [AdminController::class, 'markTicketAsUsed'])->name('tickets.markUsed');
-
-    // 💰 TAQUILLA VIRTUAL (Aprobación de Pagos)
+    
+    // Taquilla Virtual
     Route::get('/pagos/pendientes', [AdminController::class, 'pendingOrders'])->name('orders.pending');
     Route::post('/pagos/{order}/aprobar', [AdminController::class, 'approveOrder'])->name('orders.approve');
     Route::post('/pagos/{order}/rechazar', [AdminController::class, 'rejectOrder'])->name('orders.reject');
-
 });
+
 
 // ==========================================
 // ⚙️ 3. RUTAS DE PERFIL Y AUTH -> ELÍAS
@@ -74,47 +53,26 @@ Route::middleware('auth')->group(function () {
 });
 
 
-/// ==========================================
+// ==========================================
 // 🎟️ 4. RUTAS DEL CLIENTE (Usuarios normales) -> LUIS
 // ==========================================
 Route::middleware(['auth'])->group(function () {
-    
-    // Tu panel (Movido a la zona segura)
     Route::get('/mi-panel', [ClientController::class, 'dashboard'])->name('client.dashboard');
-    
-    // LA RUTA PARA DESCARGAR EL PDF (Movida a la zona segura)
     Route::get('/mi-panel/ticket/{id}/descargar', [ClientController::class, 'downloadTicket'])->name('client.ticket.download');
-    
-    // --- EL NUEVO FLUJO DE CHECKOUT DE 2 PÁGINAS ---
-    
-    // PASO 1: LA PANTALLA DEL SELECTOR DE ENTRADAS
     Route::get('/checkout/{event}', [CheckoutController::class, 'show'])->name('checkout.show');
-    
-    // PASO 2: EL CARRITO DE COMPRAS Y MÉTODO DE PAGO (¡Aquí está la nueva ruta!)
     Route::post('/checkout/summary', [CheckoutController::class, 'summary'])->name('checkout.summary');
-    
-    // PASO 3: EL MOTOR DE COMPRAS (Procesa el pago final en la BD)
     Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
 });
+
 
 // ==========================================
 // 🌐 5. INSTITUCIONAL, SOPORTE Y CONTACTO -> JEAN
 // ==========================================
-Route::controller(App\Http\Controllers\PageController::class)->group(function () {
-    
-    // Centro de Ayuda / FAQ
-    Route::get('/preguntas-frecuentes', 'faq')->name('pages.faq');
-    
-    // Formulario de Contacto
-    Route::get('/contacto', 'contact')->name('pages.contact');
-    Route::post('/contacto', 'sendContact')->name('pages.contact.send');
-    // Gracias / Pagina 
-    Route::get('/gracias', 'thanks')->name('pages.thanks');
-
-    // Páginas Legales
-    Route::get('/terminos-y-condiciones', 'terms')->name('pages.terms');
-    Route::get('/politicas-de-privacidad', 'privacy')->name('pages.privacy');
-    
-});
+Route::get('/preguntas-frecuentes', [\App\Http\Controllers\PageController::class, 'faq'])->name('pages.faq');
+Route::get('/contacto', [\App\Http\Controllers\PageController::class, 'contact'])->name('pages.contact');
+Route::post('/contacto', [\App\Http\Controllers\PageController::class, 'sendContact'])->name('pages.contact.send');
+Route::get('/gracias', [\App\Http\Controllers\PageController::class, 'thanks'])->name('pages.thanks');
+Route::get('/terminos-y-condiciones', [\App\Http\Controllers\PageController::class, 'terms'])->name('pages.terms');
+Route::get('/politicas-de-privacidad', [\App\Http\Controllers\PageController::class, 'privacy'])->name('pages.privacy');
 
 require __DIR__.'/auth.php';
