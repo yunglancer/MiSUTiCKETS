@@ -37,30 +37,32 @@ Route::get('/eventos/{id}', [StoreController::class, 'show'])->name('events.show
 // ==========================================
 // NOTA: Todo este grupo está protegido. Solo entran usuarios logueados que sean SuperAdmin u Organizador.
 
+// ==========================================
+// 🏢 2. RUTAS BACK OFFICE (Panel de Admin) -> ÁNGEL / LUIS
+// ==========================================
 Route::middleware(['auth', 'role:SuperAdmin|Organizador'])->prefix('admin')->name('admin.')->group(function () {
     
-    // AQUÍ ESTÁ EL CAMBIO: El Dashboard principal ahora apunta a tu AdminController
+    // Dashboard principal
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
-    // CRUD de Eventos (Ángel)
+    // CRUDs de Ángel
     Route::resource('events', EventController::class);
-
-    // CRUD de Recintos (Ángel)
     Route::resource('venues', VenueController::class);
-
-    // CRUD de Categorías (Ángel)
     Route::resource('categories', CategoryController::class);
 
-    // Ruta para obtener las zonas de un recinto vía AJAX (JSON)
+    // Ruta AJAX para zonas
     Route::get('venues/{venue}/zones-list', [VenueController::class, 'getZones'])->name('venues.zones');
 
-    // Aquí Ángel colocará sus rutas del CRUD de eventos adicionales
-    // Aquí el Programador Extra colocará las rutas de Venues y Categories.
-   Route::get('/tickets/{id}/verify', [AdminController::class, 'verifyTicket'])->name('tickets.verify');
+    // Escáner y Verificación de Tickets
+    Route::get('/tickets/{id}/verify', [AdminController::class, 'verifyTicket'])->name('tickets.verify');
     Route::post('/tickets/{id}/mark-used', [AdminController::class, 'markTicketAsUsed'])->name('tickets.markUsed');
 
-});
+    // 💰 TAQUILLA VIRTUAL (Aprobación de Pagos)
+    Route::get('/pagos/pendientes', [AdminController::class, 'pendingOrders'])->name('orders.pending');
+    Route::post('/pagos/{order}/aprobar', [AdminController::class, 'approveOrder'])->name('orders.approve');
+    Route::post('/pagos/{order}/rechazar', [AdminController::class, 'rejectOrder'])->name('orders.reject');
 
+});
 
 // ==========================================
 // ⚙️ 3. RUTAS DE PERFIL Y AUTH -> ELÍAS
@@ -72,7 +74,7 @@ Route::middleware('auth')->group(function () {
 });
 
 
-// ==========================================
+/// ==========================================
 // 🎟️ 4. RUTAS DEL CLIENTE (Usuarios normales) -> LUIS
 // ==========================================
 Route::middleware(['auth'])->group(function () {
@@ -83,11 +85,15 @@ Route::middleware(['auth'])->group(function () {
     // LA RUTA PARA DESCARGAR EL PDF (Movida a la zona segura)
     Route::get('/mi-panel/ticket/{id}/descargar', [ClientController::class, 'downloadTicket'])->name('client.ticket.download');
     
-    // LA PANTALLA DEL CAJERO (Muestra el formulario)
+    // --- EL NUEVO FLUJO DE CHECKOUT DE 2 PÁGINAS ---
+    
+    // PASO 1: LA PANTALLA DEL SELECTOR DE ENTRADAS
     Route::get('/checkout/{event}', [CheckoutController::class, 'show'])->name('checkout.show');
     
-    // EL MOTOR DE COMPRAS (Procesa el formulario)
+    // PASO 2: EL CARRITO DE COMPRAS Y MÉTODO DE PAGO (¡Aquí está la nueva ruta!)
+    Route::post('/checkout/summary', [CheckoutController::class, 'summary'])->name('checkout.summary');
+    
+    // PASO 3: EL MOTOR DE COMPRAS (Procesa el pago final en la BD)
     Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
 });
-
 require __DIR__.'/auth.php';

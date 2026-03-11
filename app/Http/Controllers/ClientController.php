@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Ticket; // <--- Importante para poder buscar la entrada en la base de datos
-use Barryvdh\DomPDF\Facade\Pdf; // <--- La magia que convierte el HTML en PDF
+use App\Models\Ticket; 
+use Barryvdh\DomPDF\Facade\Pdf; 
 
 class ClientController extends Controller
 {
@@ -15,7 +15,6 @@ class ClientController extends Controller
         $user = Auth::user();
 
         // 2. Buscamos sus tickets y de paso nos traemos los datos del evento y la orden
-        // 'latest()' los ordena del más nuevo al más viejo
         $tickets = $user->tickets()->with(['event', 'order'])->latest()->get();
 
         // 3. Buscamos su historial de compras
@@ -25,24 +24,25 @@ class ClientController extends Controller
         return view('client.dashboard', compact('tickets', 'orders'));
     }
 
-    // ==========================================
-    // 🖨️ NUEVA FUNCIÓN: Descargar la entrada en PDF
-    // ==========================================
     public function downloadTicket($id)
     {
-        // 1. Buscamos el ticket exacto. 
-        // El 'where' asegura que nadie pueda descargar un ticket que no haya comprado (Seguridad vital).
-        $ticket = Ticket::with(['event.venue', 'user'])
-                        ->where('user_id', Auth::id())
-                        ->findOrFail($id);
+        // 1. Buscamos el ticket con sus relaciones
+        $ticket = Ticket::with(['event.venue', 'eventZone.venueZone', 'user', 'order'])->findOrFail($id);
 
-        // 2. Cargamos la vista del diseño (ticket-pdf.blade.php) y le pasamos los datos del ticket
-        $pdf = Pdf::loadView('client.ticket-pdf', compact('ticket'));
+        // 2. Seguridad: Nadie puede descargar el ticket de otra persona
+        if ($ticket->user_id !== auth()->id()) {
+            abort(403, 'No tienes permiso para descargar esta entrada.');
+        }
 
-        // 3. Generamos un nombre dinámico para el archivo (Ej: Entrada_MiSUTiCKETS_A7B9X2KL.pdf)
-        $fileName = 'Entrada_MiSUTiCKETS_' . strtoupper(substr($ticket->ticket_code, 0, 8)) . '.pdf';
+        // 3. 🔒 EL BÚNKER: Validamos que la orden diga 'paid'
+        if ($ticket->order->status !== 'paid') {
+            abort(403, 'Tu pago aún está en revisión. Podrás descargar tu entrada cuando el administrador verifique la transferencia.');
+        }
+
+        // 4. Generamos el PDF
+        $pdf = Pdf::loadView('client.tickets.pdf', compact('ticket'));
         
-        // 4. Forzamos la descarga en el navegador
-        return $pdf->download($fileName);
+        // 5. Descargamos con un nombre único
+        return $pdf->download('MiSUTiCKETS_' . $ticket->ticket_code . '.pdf');
     }
 }
