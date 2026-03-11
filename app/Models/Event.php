@@ -4,11 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute; 
+use OwenIt\Auditing\Contracts\Auditable; // <--- 1. IMPORTAMOS EL CONTRATO DE AUDITORÍA
 
-class Event extends Model
+class Event extends Model implements Auditable // <--- 2. IMPLEMENTAMOS LA INTERFAZ
 {
+    use \OwenIt\Auditing\Auditable; // <--- 3. ACTIVAMOS EL "ESPÍA" (TRAIT)
+
+    // Agregué 'user_id' aquí para que no te dé error al crear eventos
     protected $fillable = [
-        'category_id', 'venue_id', 'title', 'slug', 'description', 
+        'category_id', 'venue_id', 'user_id', 'title', 'slug', 'description', 
         'image_path', 'event_date', 'is_featured', 'status'
     ];
 
@@ -51,28 +55,10 @@ class Event extends Model
     public function eventZones() {
         return $this->hasMany(EventZone::class);
     }
+
     // Relación: Un evento pertenece a un usuario (el creador/organizador)
-public function user()
-{
-    return $this->belongsTo(User::class);
-}
-    /**
-     * ACCESOR INTELIGENTE PARA LA IMAGEN (Cloudinary / Local / Fallback)
-     * Se usa en las vistas llamando a: $event->image_url
-     */
-    public function getImageUrlAttribute()
+    public function user()
     {
-        // 1. Si el evento no tiene imagen, devolvemos un fondo gris elegante
-        if (!$this->image_path) {
-            return 'https://ui-avatars.com/api/?name=Evento&background=f1f5f9&color=94a3b8&size=512';
-        }
-
-        // 2. Si la ruta ya es un link de internet (como la nube de Cloudinary)
-        if (str_starts_with($this->image_path, 'http')) {
-            return $this->image_path;
-        }
-
-        // 3. Si es una imagen vieja guardada en el disco duro local
-        return asset('storage/' . $this->image_path);
+        return $this->belongsTo(User::class);
     }
 }

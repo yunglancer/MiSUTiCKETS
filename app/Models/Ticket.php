@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use OwenIt\Auditing\Contracts\Auditable; // <--- 1. IMPORTAMOS EL CONTRATO DE AUDITORÍA
 
-class Ticket extends Model
+class Ticket extends Model implements Auditable // <--- 2. IMPLEMENTAMOS LA INTERFAZ
 {
     use HasFactory;
+    use \OwenIt\Auditing\Auditable; // <--- 3. ACTIVAMOS EL "ESPÍA" (TRAIT)
 
     protected $fillable = [
         'order_id',
@@ -35,6 +37,7 @@ class Ticket extends Model
     {
         return $this->belongsTo(Event::class); // Asegúrate de que el modelo Event exista
     }
+    
     /**
      * Relación: Un ticket pertenece a una Zona de Evento específica.
      */

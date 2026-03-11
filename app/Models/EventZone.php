@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use OwenIt\Auditing\Contracts\Auditable; // <--- 1. IMPORTAMOS EL CONTRATO DE AUDITORÍA
 
-class EventZone extends Model
+class EventZone extends Model implements Auditable // <--- 2. IMPLEMENTAMOS LA INTERFAZ
 {
     use HasFactory;
+    use \OwenIt\Auditing\Auditable; // <--- 3. ACTIVAMOS EL "ESPÍA" (TRAIT)
 
     /**
      * Los atributos que se pueden asignar masivamente.

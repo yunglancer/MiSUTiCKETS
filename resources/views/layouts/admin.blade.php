@@ -78,22 +78,15 @@
             </li>
 
             {{-- Taquilla Virtual (Pagos Pendientes) --}}
-@php $isOrders = request()->routeIs('admin.orders.*'); @endphp
-<li>
-    <a href="{{ route('admin.orders.pending') }}" 
-       class="flex items-center gap-3 py-3 px-4 rounded-2xl transition-all duration-200 group {{ $isOrders ? 'bg-[#FF6600]/10 text-[#FF6600]' : 'hover:bg-slate-800 hover:text-white' }}">
-        <span class="material-icons text-lg {{ $isOrders ? 'text-[#FF6600]' : 'text-slate-500 group-hover:text-white transition-colors' }}">payments</span>
-        <span class="text-xs uppercase tracking-widest font-bold {{ $isOrders ? 'text-[#FF6600]' : 'text-slate-400 group-hover:text-white' }}">Taquilla Virtual</span>
-    </a>
-</li>
-
+            @php $isOrders = request()->routeIs('admin.orders.*'); @endphp
             <li>
-                <a href="#" class="flex items-center gap-3 py-3 px-4 rounded-2xl transition-all duration-200 hover:bg-slate-800 hover:text-white group">
-                    <span class="material-icons text-lg text-slate-500 group-hover:text-white transition-colors">security</span>
-                    <span class="text-xs uppercase tracking-widest font-bold text-slate-400 group-hover:text-white">Seguridad</span>
+                <a href="{{ route('admin.orders.pending') }}" 
+                   class="flex items-center gap-3 py-3 px-4 rounded-2xl transition-all duration-200 group {{ $isOrders ? 'bg-[#FF6600]/10 text-[#FF6600]' : 'hover:bg-slate-800 hover:text-white' }}">
+                    <span class="material-icons text-lg {{ $isOrders ? 'text-[#FF6600]' : 'text-slate-500 group-hover:text-white transition-colors' }}">payments</span>
+                    <span class="text-xs uppercase tracking-widest font-bold {{ $isOrders ? 'text-[#FF6600]' : 'text-slate-400 group-hover:text-white' }}">Taquilla Virtual</span>
                 </a>
             </li>
-            
+
             <li>
                 <a href="#" class="flex items-center gap-3 py-3 px-4 rounded-2xl transition-all duration-200 hover:bg-slate-800 hover:text-white group">
                     <span class="material-icons text-lg text-slate-500 group-hover:text-white transition-colors">support_agent</span>
@@ -101,7 +94,7 @@
                 </a>
             </li>
 
-            {{-- Sección de Administración Avanzada --}}
+            {{-- Sección de Administración Avanzada (Solo SuperAdmin) --}}
             @role('SuperAdmin')
                 <div class="mt-10 mb-4 px-6">
                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Configuración Pro</span>
@@ -113,7 +106,13 @@
                     <span class="text-[11px] font-black uppercase tracking-widest">Seguridad y Roles</span>
                 </a>
 
-                {{-- Puedes añadir aquí otros links de SuperAdmin como Ajustes Globales o Reportes --}}
+                {{-- NUEVO BOTÓN DE AUDITORÍA --}}
+                @php $isAudits = request()->routeIs('admin.audits.*'); @endphp
+                <a href="{{ route('admin.audits.index') }}" 
+                class="flex items-center gap-3 px-6 py-4 mt-2 rounded-2xl transition-all duration-300 {{ $isAudits ? 'bg-[#FF6600] text-white shadow-lg shadow-[#FF6600]/20' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900' }}">
+                    <span class="material-icons text-[20px]">policy</span>
+                    <span class="text-[11px] font-black uppercase tracking-widest">Auditoría</span>
+                </a>
             @endrole
         </ul>
 

@@ -6,11 +6,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Traits\HasRoles; // <-- NUEVO: Importar el Trait de Spatie
+use Spatie\Permission\Traits\HasRoles; 
+use OwenIt\Auditing\Contracts\Auditable; // <--- 1. IMPORTAR EL CONTRATO DE AUDITORÍA
 
-class User extends Authenticatable
+class User extends Authenticatable implements Auditable // <--- 2. IMPLEMENTAR LA INTERFAZ
 {
-    use HasFactory, Notifiable, HasRoles; // <-- NUEVO: Agregar HasRoles aquí
+    use HasFactory, Notifiable, HasRoles; 
+    use \OwenIt\Auditing\Auditable; // <--- 3. ACTIVAR EL "ESPÍA" (TRAIT)
 
     /**
      * The attributes that are mass assignable.
@@ -23,7 +25,7 @@ class User extends Authenticatable
         'password',
         'document_id',
         'phone',
-        'role', // <--- Agrega esta línea
+        'role', 
     ];
 
     /**
@@ -48,6 +50,7 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    
     // Un usuario tiene muchas órdenes de compra
     public function orders()
     {

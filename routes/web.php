@@ -62,6 +62,9 @@ Route::middleware(['auth', 'role:SuperAdmin|Organizador|Validador'])->prefix('ad
         // Gestión de Usuarios (Solo SuperAdmin)
         Route::get('users', [UserController::class, 'index'])->name('users.index');
         Route::patch('users/{user}/role', [UserController::class, 'updateRole'])->name('users.updateRole');
+
+       // Busca la ruta que pegaste y déjala EXACTAMENTE así:
+Route::get('/auditoria', [\App\Http\Controllers\AuditController::class, 'index'])->name('audits.index');
     });
 
     // --- TAQUILLA VIRTUAL: Solo SuperAdmin y Validador ---
@@ -73,7 +76,9 @@ Route::middleware(['auth', 'role:SuperAdmin|Organizador|Validador'])->prefix('ad
         // Validación física de tickets
         Route::get('/tickets/{id}/verify', [AdminController::class, 'verifyTicket'])->name('tickets.verify');
         Route::post('/tickets/{id}/mark-used', [AdminController::class, 'markTicketAsUsed'])->name('tickets.markUsed');
+        
     });
+  
 });
 
 
