@@ -27,9 +27,10 @@
             <div>
                 <h4 class="font-bold text-slate-900 dark:text-white mb-4 uppercase text-xs tracking-widest">Soporte</h4>
                 <ul class="space-y-2 text-sm text-slate-600 dark:text-slate-400">
-                    <li><a href="#" class="hover:text-[#FF6B00]">Centro de Ayuda</a></li>
-                    <li><a href="#" class="hover:text-[#FF6B00]">Privacidad</a></li>
-                    <li><a href="#" class="hover:text-[#FF6B00]">Contacto</a></li>
+                <li><a href="{{ route('pages.terms') }}" class="hover:text-[#FF6600] transition-colors">Términos y Condiciones </a></li>
+                    <li><a href="{{ route('pages.privacy') }}" class="hover:text-[#FF6600] transition-colors"> Privacidad </a></li>
+                    <li><a href="{{ route('pages.contact') }}" class="hover:text-[#FF6600] transition-colors">Contacto </a></li>
+                    <li><a href="{{ route('pages.faq') }}" class="hover:text-[#FF6600] transition-colors">Preguntas Frecuentes</a></li>
                 </ul>
             </div>
 
