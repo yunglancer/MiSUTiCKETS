@@ -177,7 +177,7 @@ class EventController extends Controller
                 return redirect()->route('admin.events.index')->with('success', '¡Evento actualizado correctamente!');
             });
         } catch (\Exception $e) {
-            dd("Error en Update: " . $e->getMessage());
+            return back()->with('error', 'Error al actualizar: ' . $e->getMessage());
         }
     }
 
@@ -221,11 +221,12 @@ class EventController extends Controller
         return view('admin.events.metrics', compact('event', 'statsByZone', 'totalRevenue', 'totalSold'));
     }
 
-    // --- NUEVO: Muestra el detalle del evento al PÚBLICO ---
+    // --- CORREGIDO: Apunta a la vista admin.events.show ---
     public function showPublic($id)
     {
         $event = Event::with(['venue.zones', 'category', 'eventZones'])->findOrFail($id);
-        return view('events.show', compact('event'));
+        // Cambié 'events.show' por 'admin.events.show' que es la que existe en tu proyecto
+        return view('admin.events.show', compact('event'));
     }
 
     // Lista eventos con FILTROS en el FRONT
@@ -249,6 +250,7 @@ class EventController extends Controller
         $events = $query->latest()->get();
         $categories = Category::all(); 
         
+        // Esta vista suele estar en resources/views/events/index.blade.php
         return view('events.index', compact('events', 'categories'));
     }
 }
