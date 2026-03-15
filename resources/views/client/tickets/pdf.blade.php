@@ -35,12 +35,14 @@
         </div>
 
         <div class="event-title text-orange">
-            {{ $ticket->event->title }}
+            {{ $ticket->event->title ?? 'Evento sin título' }}
         </div>
 
         <div class="col-half">
             <div class="label">Fecha y Hora</div>
-            <div class="value">{{ \Carbon\Carbon::parse($ticket->event->event_date)->format('d/m/Y - h:i A') }}</div>
+            <div class="value">
+                {{ $ticket->event->event_date ? \Carbon\Carbon::parse($ticket->event->event_date)->format('d/m/Y - h:i A') : 'Fecha no disponible' }}
+            </div>
         </div>
         <div class="col-half">
             <div class="label">Lugar del Evento</div>
@@ -51,13 +53,15 @@
 
         <div class="col-half">
             <div class="label">Zona del Evento</div>
-            <div class="value value-large">{{ $ticket->eventZone->venueZone->name ?? 'Zona General' }}</div>
+            {{-- CORREGIDO: Uso de null-safe para evitar error si no hay zona --}}
+            <div class="value value-large">{{ $ticket->eventZone?->venueZone?->name ?? 'Zona General' }}</div>
         </div>
         <div class="col-half">
             <div class="label">Precio / Factura</div>
             <div class="value">
-                ${{ number_format($ticket->eventZone->price, 2) }} 
-                <span style="font-size: 12px; color: #64748b; font-weight: normal;">(Orden: {{ $ticket->order->order_number }})</span>
+                {{-- CORREGIDO: Verificación de existencia de eventZone antes de dar formato al precio --}}
+                ${{ number_format($ticket->eventZone?->price ?? 0, 2) }} 
+                <span style="font-size: 12px; color: #64748b; font-weight: normal;">(Orden: {{ $ticket->order->order_number ?? 'N/A' }})</span>
             </div>
         </div>
 
@@ -65,7 +69,7 @@
 
         <div class="col-half">
             <div class="label">Titular de la Entrada</div>
-            <div class="value">{{ $ticket->user->name }}</div>
+            <div class="value">{{ $ticket->user->name ?? 'N/A' }}</div>
         </div>
         <div class="col-half">
             <div class="label">Documento de Identidad</div>
@@ -77,11 +81,12 @@
             <p style="margin: 0 0 10px 0; font-size: 12px; color: #64748b;">Presenta este código QR desde tu celular o impreso.</p>
             
             <div class="qr-box">
+                {{-- Generación de QR con fallback de ID si no hay código único --}}
                 <img src="data:image/svg+xml;base64,{{ base64_encode(QrCode::format('svg')->size(140)->generate(route('admin.tickets.verify', $ticket->id))) }}" alt="Código QR de la Entrada">
             </div>
             
             <div class="uuid">
-                CÓDIGO ÚNICO: {{ $ticket->ticket_code }}
+                CÓDIGO ÚNICO: {{ $ticket->ticket_code ?? $ticket->id }}
             </div>
         </div>
     </div>
