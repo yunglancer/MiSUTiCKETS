@@ -56,7 +56,7 @@
         <div class="col-half">
             <div class="label">Precio / Factura</div>
             <div class="value">
-                ${{ number_format($ticket->eventZone->price, 2) }} 
+                REF. {{ number_format($ticket->eventZone->price, 2) }} 
                 <span style="font-size: 12px; color: #64748b; font-weight: normal;">(Orden: {{ $ticket->order->order_number }})</span>
             </div>
         </div>

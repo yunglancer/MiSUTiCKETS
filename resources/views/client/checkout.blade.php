@@ -54,7 +54,7 @@
                                 <div class="flex items-center justify-between p-4 border border-slate-200 rounded-2xl bg-white hover:border-[#FF6600] transition-colors shadow-sm">
                                     <div>
                                         <p class="font-bold text-slate-800 text-lg">{{ $zone->venueZone->name ?? 'Zona General' }}</p>
-                                        <p class="text-[#FF6600] font-black text-xl">${{ number_format($zone->price, 2) }}</p>
+                                        <p class="text-[#FF6600] font-black text-xl">REF. {{ number_format($zone->price, 2) }}</p>
                                         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Límite: Máx 10 por usuario</p>
                                     </div>
                                     

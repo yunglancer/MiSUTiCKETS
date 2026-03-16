@@ -21,7 +21,7 @@
             </div>
             <div>
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Ingresos Totales</p>
-                <h3 class="text-3xl font-black text-slate-900">${{ number_format($totalRevenue, 2) }}</h3>
+                <h3 class="text-3xl font-black text-slate-900">REF. {{ number_format($totalRevenue, 2) }}</h3>
             </div>
         </div>
 
@@ -71,7 +71,7 @@
                             <td class="px-6 py-5 whitespace-nowrap font-mono font-bold text-slate-900">#{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}</td>
                             <td class="px-6 py-5 whitespace-nowrap font-bold text-slate-700">{{ $order->user->name }}</td>
                             <td class="px-6 py-5 whitespace-nowrap text-slate-500 text-xs font-medium">{{ $order->created_at->format('d/m/Y H:i') }}</td>
-                           <td class="px-6 py-5 whitespace-nowrap font-black text-emerald-500">${{ number_format($order->total_amount, 2) }}</td>
+                           <td class="px-6 py-5 whitespace-nowrap font-black text-emerald-500">REF. {{ number_format($order->total_amount, 2) }}</td>
                             <td class="px-6 py-5 whitespace-nowrap">
                                 <span class="bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
                                     {{ $order->status }}

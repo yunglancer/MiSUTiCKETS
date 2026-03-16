@@ -60,7 +60,7 @@
             <div class="label">Precio / Factura</div>
             <div class="value">
                 {{-- CORREGIDO: Verificación de existencia de eventZone antes de dar formato al precio --}}
-                ${{ number_format($ticket->eventZone?->price ?? 0, 2) }} 
+                REF. {{ number_format($ticket->eventZone?->price ?? 0, 2) }} 
                 <span style="font-size: 12px; color: #64748b; font-weight: normal;">(Orden: {{ $ticket->order->order_number ?? 'N/A' }})</span>
             </div>
         </div>

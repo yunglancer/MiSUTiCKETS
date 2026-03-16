@@ -97,7 +97,7 @@
     @endphp
 
     <span class="text-5xl font-bold text-white">
-        ${{ $precioMinimo ? number_format($precioMinimo, 2) : '0.00' }}
+        REF. {{ $precioMinimo ? number_format($precioMinimo, 2) : '0.00' }}
     </span>
     
     <span class="text-slate-500 text-sm">/ p.p.</span>

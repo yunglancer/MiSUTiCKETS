@@ -33,9 +33,9 @@
                                 <div class="flex justify-between items-center">
                                     <div>
                                         <p class="font-bold text-slate-100">{{ $item['name'] }}</p>
-                                        <p class="text-xs text-slate-400">{{ $item['quantity'] }} x ${{ number_format($item['price'], 2) }}</p>
+                                        <p class="text-xs text-slate-400">{{ $item['quantity'] }} x REF. {{ number_format($item['price'], 2) }}</p>
                                     </div>
-                                    <p class="font-black text-[#FF6600]">${{ number_format($item['total'], 2) }}</p>
+                                    <p class="font-black text-[#FF6600]">REF. {{ number_format($item['total'], 2) }}</p>
                                 </div>
                             @endforeach
                         </div>
@@ -43,17 +43,17 @@
                         <div class="bg-slate-800/50 rounded-2xl p-5 border border-slate-700/50">
                             <div class="flex justify-between items-center mb-2">
                                 <span class="text-sm text-slate-400 font-bold uppercase tracking-wider">Subtotal</span>
-                                <span class="font-bold text-slate-200">${{ number_format($subtotal, 2) }}</span>
+                                <span class="font-bold text-slate-200">REF. {{ number_format($subtotal, 2) }}</span>
                             </div>
                             <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-700">
                                 <span class="text-sm text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
                                     Fee de Servicio <span class="material-icons text-[14px] text-slate-500" title="10% por costos de plataforma">info</span>
                                 </span>
-                                <span class="font-bold text-slate-200">${{ number_format($platformFee, 2) }}</span>
+                                <span class="font-bold text-slate-200">REF. {{ number_format($platformFee, 2) }}</span>
                             </div>
                             <div class="flex justify-between items-end">
                                 <span class="text-xs text-[#FF6600] font-black uppercase tracking-widest">Total a Pagar</span>
-                                <span class="text-3xl font-black text-white">${{ number_format($grandTotal, 2) }}</span>
+                                <span class="text-3xl font-black text-white">REF. {{ number_format($grandTotal, 2) }}</span>
                             </div>
                         </div>
                     </div>

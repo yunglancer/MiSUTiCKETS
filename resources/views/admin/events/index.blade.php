@@ -100,7 +100,7 @@
                                     <div class="bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg flex flex-col items-center min-w-[70px] hover:border-[#FF6600]/30 transition-colors">
                                         <span class="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">{{ $zone->venueZone->name }}</span>
                                         <div class="flex items-baseline gap-0.5">
-                                            <span class="text-[9px] font-bold text-[#FF6600]">$</span>
+                                            <span class="text-[9px] font-bold text-[#FF6600]">REF.</span>
                                             <span class="text-[12px] font-black text-slate-800 tracking-tight">{{ number_format($zone->price, 0) }}</span>
                                         </div>
                                         <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{{ $zone->capacity }} cant.</span>

@@ -48,7 +48,7 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-5">
-                                    <span class="text-lg font-black text-[#FF6600]">${{ number_format($order->total_amount, 2) }}</span>
+                                    <span class="text-lg font-black text-[#FF6600]">REF. {{ number_format($order->total_amount, 2) }}</span>
                                 </td>
                                 <td class="px-6 py-5">
                                     <div class="flex items-center gap-2">

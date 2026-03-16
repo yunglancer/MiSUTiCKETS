@@ -13,7 +13,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Ingresos del Evento</p>
-            <span class="text-2xl font-black text-slate-900">${{ number_format($totalRevenue, 2) }}</span>
+            <span class="text-2xl font-black text-slate-900">REF. {{ number_format($totalRevenue, 2) }}</span>
         </div>
         <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Entradas Vendidas</p>
@@ -45,7 +45,7 @@
                 </div>
 
                 <div class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
-                    Recaudado en zona: <span class="text-slate-700">${{ number_format($zone['revenue'], 2) }}</span>
+                    Recaudado en zona: <span class="text-slate-700">REF. {{ number_format($zone['revenue'], 2) }}</span>
                 </div>
             </div>
             @endforeach
