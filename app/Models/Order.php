@@ -11,14 +11,19 @@ class Order extends Model implements Auditable // <--- 2. IMPLEMENTAMOS LA INTER
     use HasFactory;
     use \OwenIt\Auditing\Auditable; // <--- 3. ACTIVAMOS EL "ESPÍA" (TRAIT)
 
-    // Los campos que podemos guardar
-    protected $fillable = [
+protected $fillable = [
         'user_id',
         'order_number',
         'total_amount',
-        'status', // <--- ¡ESTE DEBE ESTAR AQUÍ!
+        'exchange_rate', // <--- ¡AQUÍ ESTÁ EL NUEVO!
+        'status', 
         'payment_method',
         'payment_reference',
+        // ¡ESTOS SON LOS NUEVOS!
+        'payment_name',
+        'payment_document',
+        'payment_phone',
+        'payment_receipt_path',
     ];
 
     // Una orden pertenece a un usuario

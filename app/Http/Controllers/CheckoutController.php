@@ -11,9 +11,24 @@ use App\Models\EventZone;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Cloudinary\Cloudinary;
 
 class CheckoutController extends Controller
 {
+    // =========================================================================
+    // INSTANCIA DE CLOUDINARY (El método infalible del equipo)
+    // =========================================================================
+    private function getCloudinaryInstance()
+    {
+        return new Cloudinary([
+            'cloud' => [
+                'cloud_name' => 'duw8vlhwx',
+                'api_key'    => '971486582559871',
+                'api_secret' => 'IWIQxbCjYBU0nAAs-xpMEDJgHBs',
+            ],
+        ]);
+    }
+
     // =========================================================================
     // 1. MUESTRA LA PANTALLA DE SELECCIÓN DE ENTRADAS (Paso 1)
     // =========================================================================
@@ -29,7 +44,6 @@ class CheckoutController extends Controller
     public function summary(Request $request)
     {
         // 🛡️ CAPA DE SEGURIDAD PREVENTIVA: 
-        // No dejamos que el usuario entre al carrito si ya tiene una orden pendiente.
         $ordenPendiente = Order::where('user_id', Auth::id())
                                ->where('status', 'pending')
                                ->first();
@@ -38,15 +52,14 @@ class CheckoutController extends Controller
             return redirect()->route('checkout.show', $request->event_id)
                              ->with('error', "No puedes iniciar una nueva compra porque ya tienes la Orden #{$ordenPendiente->order_number} pendiente de pago.");
         }
+
         $request->validate([
             'event_id' => 'required|exists:events,id',
             'tickets' => 'required|array',
-          // 🛑 CAPA DE SEGURIDAD 2: Referencia única en toda la tabla 'orders'
-    'payment_reference' => 'nullable|string|unique:orders,payment_reference',
-], [
-    // Mensaje de error personalizado para que el cliente entienda
-    'payment_reference.unique' => '¡Alerta! Este número de referencia ya fue utilizado en otra compra. Si crees que es un error, contáctanos.'
-]);
+            'payment_reference' => 'nullable|string|unique:orders,payment_reference',
+        ], [
+            'payment_reference.unique' => '¡Alerta! Este número de referencia ya fue utilizado en otra compra. Si crees que es un error, contáctanos.'
+        ]);
 
         $event = Event::with('eventZones.venueZone')->findOrFail($request->event_id);
         
@@ -87,100 +100,167 @@ class CheckoutController extends Controller
     // =========================================================================
     // 3. EL BÚNKER: PROCESA LA COMPRA EN LA BASE DE DATOS (Paso 3)
     // =========================================================================
-    // =========================================================================
-    // 3. EL BÚNKER: PROCESA LA COMPRA EN LA BASE DE DATOS (Paso 3)
-    // =========================================================================
     public function process(Request $request)
     {
-        // 🛑 CAPA DE SEGURIDAD 1: Bloquear múltiples órdenes pendientes
+        // 🛑 SEGURIDAD 1: Bloquear órdenes pendientes
         $ordenPendiente = Order::where('user_id', Auth::id())
-                                   ->where('status', 'pending')
-                                   ->first();
+                               ->where('status', 'pending')
+                               ->first();
 
         if ($ordenPendiente) {
-            // 🚨 CAMBIO CLAVE: Redirigimos explícitamente al evento, nunca usamos back()
             return redirect()->route('checkout.show', $request->event_id)
-                             ->with('error', "Ya tienes la Orden #{$ordenPendiente->order_number} en espera de pago. Por favor transfiere y notifica, o espera a que caduque para intentar de nuevo.");
+                             ->with('error', "Ya tienes la Orden #{$ordenPendiente->order_number} en espera de pago.");
         }
 
-        // 🛑 CAPA DE SEGURIDAD 2: Validación manual antifraude
-        // Usamos Validator::make en lugar de $request->validate() para que no haga back() automático
+    // 🛑 VALIDACIÓN BLINDADA (TODOS LOS CAMPOS)
         $validator = Validator::make($request->all(), [
             'event_id' => 'required|exists:events,id',
             'cart_items' => 'required|string', 
-            'payment_method' => 'required|string',
-            'payment_reference' => 'required|string|unique:orders,payment_reference',
+            'payment_method' => 'required|string|in:pago_movil,zelle,binance',
+            'payment_reference' => 'required|numeric|unique:orders,payment_reference',
+            
+            'payment_name' => 'required|string|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/|max:100',
+            // Regla estricta para Cédula o Correo
+            'payment_document' => 'required|string|regex:/^[a-zA-Z0-9\-\.\@\_]+$/|max:100',
+            // Regla estricta para Teléfono (mínimo 10 números)
+            'payment_phone' => 'required|string|regex:/^[\d\+\-\s]+$/|min:10|max:20',
+            // Regla estricta para Imagen (Solo JPG/PNG y max 2MB)
+            'payment_receipt_path' => 'required|image|mimes:jpeg,png,jpg|max:2048', 
         ], [
-            'payment_reference.unique' => '¡Alerta! Este número de referencia ya fue registrado en nuestro sistema. Revisa tus datos o contáctanos si crees que es un error.'
+            'payment_reference.numeric' => 'La referencia debe ser un número.',
+            'payment_reference.unique' => 'Esta referencia ya fue registrada.',
+            'payment_name.regex' => 'El nombre solo puede contener letras.',
+            'payment_document.regex' => 'El formato del documento o correo es inválido.',
+            'payment_phone.regex' => 'El teléfono solo acepta números o el signo +.',
+            'payment_phone.min' => 'El teléfono debe tener al menos 10 dígitos.',
+            'payment_receipt_path.required' => 'El capture es obligatorio.',
+            'payment_receipt_path.image' => 'El capture debe ser una imagen válida (JPG, PNG).',
+            'payment_receipt_path.max' => 'El capture no debe pesar más de 2MB.',
         ]);
 
-        // 🚨 CAMBIO CLAVE: Si hay un error (ej. referencia repetida o campo vacío), lo mandamos al evento
+ // 🚨 SI LA VALIDACIÓN FALLA: Reconstrucción Ultra-Segura
         if ($validator->fails()) {
-            return redirect()->route('checkout.show', $request->event_id)
-                             ->with('error', $validator->errors()->first());
-        }
+            // 1. Recuperamos el evento
+            $event = Event::with('eventZones.venueZone')->findOrFail($request->event_id);
+            
+            // 2. Decodificamos el carrito (Escudo Antimisiles)
+            $decodedString = base64_decode($request->cart_items);
+            $decodedArray = json_decode($decodedString, true);
 
+            // Aseguramos que SIEMPRE sea un arreglo y SIEMPRE tenga llaves numéricas (0, 1, 2...)
+            $cartItems = [];
+            if (is_array($decodedArray)) {
+                foreach ($decodedArray as $item) {
+                    // Validamos que el item tenga al menos la estructura básica
+                    if (is_array($item) && isset($item['zone_id'])) {
+                        $cartItems[] = $item; 
+                    }
+                }
+            }
+
+            // Si a pesar de todo el carrito está vacío, no intentamos pintar la vista, 
+            // mandamos al inicio con un mensaje claro.
+            if (empty($cartItems)) {
+                return redirect()->route('checkout.show', $request->event_id)
+                                 ->with('error', 'Ocurrió un error al procesar tu carrito. Por favor, selecciona tus entradas de nuevo.');
+            }
+
+            // 3. Recalculamos TODO lo que la vista pide
+            $subtotal = 0;
+            $totalTickets = 0;
+            foreach ($cartItems as $item) {
+                $subtotal += (float) ($item['total'] ?? 0);
+                $totalTickets += (int) ($item['quantity'] ?? 0);
+            }
+            
+            $platformFee = $subtotal * 0.10;
+            $grandTotal = $subtotal + $platformFee;
+            
+            $settingBcv = \App\Models\Setting::where('key', 'bcv_rate')->first();
+            $bcvRate = $settingBcv ? (float) $settingBcv->value : 60.50;
+
+            // 🚀 PASAMOS TODAS LAS VARIABLES
+            return view('client.summary', compact(
+                'event', 
+                'cartItems', 
+                'subtotal', 
+                'platformFee', 
+                'grandTotal', 
+                'totalTickets', 
+                'bcvRate'
+            ))->withErrors($validator)->withInput();
+        }
+        // --- PROCESO DE GUARDADO ---
         try {
             DB::beginTransaction();
-            $user = Auth::user();
-            $cartItems = json_decode($request->cart_items, true);
+
+            // Subir capture (Método Jean)
+            $receiptPathUrl = null;
+            if ($request->hasFile('payment_receipt_path')) {
+                $cloudinary = $this->getCloudinaryInstance();
+                $upload = $cloudinary->uploadApi()->upload(
+                    $request->file('payment_receipt_path')->getRealPath(),
+                    ['folder' => 'misutickets/receipts']
+                );
+                $receiptPathUrl = $upload['secure_url'];
+            }
+
+            // Limpieza del carrito para procesar tickets
+            $decoded = json_decode(base64_decode($request->cart_items), true);
+            $cartItems = is_array($decoded) ? array_values($decoded) : [];
+            
+            if (empty($cartItems)) throw new \Exception("El carrito está vacío.");
             
             $subtotal = 0;
             $lockedZones = [];
 
-            // 1. RECALCULAMOS TOTALES Y BLOQUEAMOS LAS FILAS
             foreach ($cartItems as $item) {
-                $zone = EventZone::where('id', $item['zone_id'])
-                                ->lockForUpdate()
-                                ->firstOrFail();
-                
+                $zone = EventZone::where('id', $item['zone_id'])->lockForUpdate()->firstOrFail();
                 if ($zone->capacity < $item['quantity']) {
-                    throw new \Exception("Lo sentimos, la zona {$item['name']} ya no tiene suficientes entradas disponibles.");
+                    throw new \Exception("Sin cupo en la zona {$item['name']}.");
                 }
-                
                 $subtotal += ($zone->price * $item['quantity']);
-                $lockedZones[] = [
-                    'model' => $zone,
-                    'quantity' => $item['quantity'],
-                    'zone_id' => $zone->id
-                ];
+                $lockedZones[] = ['model' => $zone, 'quantity' => $item['quantity'], 'zone_id' => $zone->id];
             }
 
-            $platformFee = $subtotal * 0.10;
-            $grandTotal = $subtotal + $platformFee;
+            $settingBcv = \App\Models\Setting::where('key', 'bcv_rate')->first();
+            $currentBcvRate = $settingBcv ? (float) $settingBcv->value : 60.50;
 
-            // 2. CREAMOS LA ORDEN
             $order = Order::create([
-                'user_id' => $user->id,
+                'user_id' => Auth::id(),
                 'order_number' => 'MISU-' . strtoupper(Str::random(8)),
-                'total_amount' => $grandTotal, 
+                'total_amount' => $subtotal + ($subtotal * 0.10), 
+                'exchange_rate' => $currentBcvRate,
                 'status' => 'pending', 
                 'payment_method' => $request->payment_method,
                 'payment_reference' => $request->payment_reference,
+                'payment_name' => $request->payment_name,
+                'payment_document' => $request->payment_document,
+                'payment_phone' => $request->payment_phone,
+                'payment_receipt_path' => $receiptPathUrl,
             ]);
 
-            // 3. GENERAMOS LOS TICKETS Y DESCONTAMOS INVENTARIO
             foreach ($lockedZones as $lz) {
                 for ($i = 0; $i < $lz['quantity']; $i++) {
                     Ticket::create([
                         'order_id' => $order->id,
-                        'user_id' => $user->id,
+                        'user_id' => Auth::id(),
                         'event_id' => $request->event_id,
                         'event_zone_id' => $lz['zone_id'], 
-                        'ticket_code' => Str::uuid(),
+                        'ticket_code' => (string) Str::uuid(),
                         'status' => 'active', 
                     ]);
                 }
-                
                 $lz['model']->decrement('capacity', $lz['quantity']);
             }
 
             DB::commit();
-            return redirect()->route('client.dashboard')->with('success', '¡Compra procesada con éxito! Tus entradas están en revisión.');
+            return redirect()->route('client.dashboard')->with('success', '¡Pago reportado con éxito!');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->route('checkout.show', $request->event_id)->with('error', 'Hubo un problema: ' . $e->getMessage());
+            return redirect()->route('checkout.show', $request->event_id)->with('error', $e->getMessage());
         }
     }
-}
+    }
+    
