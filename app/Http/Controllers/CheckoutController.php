@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Cloudinary\Cloudinary;
+use Illuminate\Support\Facades\Log; // Importante para loguear errores de correo
+use Illuminate\Support\Facades\Mail; // Importante para enviar correos
+use App\Mail\PaymentReported; // Importante para llamar a la clase Mailable
 
 class CheckoutController extends Controller
 {
@@ -94,7 +97,11 @@ class CheckoutController extends Controller
         $platformFee = $subtotal * 0.10; 
         $grandTotal = $subtotal + $platformFee;
 
-        return view('client.summary', compact('event', 'cartItems', 'subtotal', 'platformFee', 'grandTotal', 'totalTickets'));
+        // 🚀 BUSCAR LA TASA BCV REAL DE LA BD
+        $settingBcv = \App\Models\Setting::where('key', 'bcv_rate')->first();
+        $bcvRate = $settingBcv ? (float) $settingBcv->value : 60.50;
+
+        return view('client.summary', compact('event', 'cartItems', 'subtotal', 'platformFee', 'grandTotal', 'totalTickets', 'bcvRate'));
     }
 
     // =========================================================================
@@ -112,19 +119,15 @@ class CheckoutController extends Controller
                              ->with('error', "Ya tienes la Orden #{$ordenPendiente->order_number} en espera de pago.");
         }
 
-    // 🛑 VALIDACIÓN BLINDADA (TODOS LOS CAMPOS)
+        // 🛑 VALIDACIÓN BLINDADA (TODOS LOS CAMPOS)
         $validator = Validator::make($request->all(), [
             'event_id' => 'required|exists:events,id',
             'cart_items' => 'required|string', 
             'payment_method' => 'required|string|in:pago_movil,zelle,binance',
             'payment_reference' => 'required|numeric|unique:orders,payment_reference',
-            
             'payment_name' => 'required|string|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/|max:100',
-            // Regla estricta para Cédula o Correo
             'payment_document' => 'required|string|regex:/^[a-zA-Z0-9\-\.\@\_]+$/|max:100',
-            // Regla estricta para Teléfono (mínimo 10 números)
             'payment_phone' => 'required|string|regex:/^[\d\+\-\s]+$/|min:10|max:20',
-            // Regla estricta para Imagen (Solo JPG/PNG y max 2MB)
             'payment_receipt_path' => 'required|image|mimes:jpeg,png,jpg|max:2048', 
         ], [
             'payment_reference.numeric' => 'La referencia debe ser un número.',
@@ -138,7 +141,7 @@ class CheckoutController extends Controller
             'payment_receipt_path.max' => 'El capture no debe pesar más de 2MB.',
         ]);
 
- // 🚨 SI LA VALIDACIÓN FALLA: Reconstrucción Ultra-Segura
+        // 🚨 SI LA VALIDACIÓN FALLA: Reconstrucción Ultra-Segura
         if ($validator->fails()) {
             // 1. Recuperamos el evento
             $event = Event::with('eventZones.venueZone')->findOrFail($request->event_id);
@@ -151,15 +154,13 @@ class CheckoutController extends Controller
             $cartItems = [];
             if (is_array($decodedArray)) {
                 foreach ($decodedArray as $item) {
-                    // Validamos que el item tenga al menos la estructura básica
                     if (is_array($item) && isset($item['zone_id'])) {
                         $cartItems[] = $item; 
                     }
                 }
             }
 
-            // Si a pesar de todo el carrito está vacío, no intentamos pintar la vista, 
-            // mandamos al inicio con un mensaje claro.
+            // Si el carrito está vacío, regresamos al primer paso
             if (empty($cartItems)) {
                 return redirect()->route('checkout.show', $request->event_id)
                                  ->with('error', 'Ocurrió un error al procesar tu carrito. Por favor, selecciona tus entradas de nuevo.');
@@ -190,11 +191,12 @@ class CheckoutController extends Controller
                 'bcvRate'
             ))->withErrors($validator)->withInput();
         }
+
         // --- PROCESO DE GUARDADO ---
         try {
             DB::beginTransaction();
 
-            // Subir capture (Método Jean)
+            // Subir capture
             $receiptPathUrl = null;
             if ($request->hasFile('payment_receipt_path')) {
                 $cloudinary = $this->getCloudinaryInstance();
@@ -206,10 +208,18 @@ class CheckoutController extends Controller
             }
 
             // Limpieza del carrito para procesar tickets
-            $decoded = json_decode(base64_decode($request->cart_items), true);
-            $cartItems = is_array($decoded) ? array_values($decoded) : [];
+            $decodedString = base64_decode($request->cart_items);
+            $decodedArray = json_decode($decodedString, true);
+            $cartItems = [];
+            if (is_array($decodedArray)) {
+                foreach ($decodedArray as $item) {
+                    if (is_array($item) && isset($item['zone_id'])) {
+                        $cartItems[] = $item; 
+                    }
+                }
+            }
             
-            if (empty($cartItems)) throw new \Exception("El carrito está vacío.");
+            if (empty($cartItems)) throw new \Exception("El carrito está vacío o corrupto.");
             
             $subtotal = 0;
             $lockedZones = [];
@@ -223,13 +233,16 @@ class CheckoutController extends Controller
                 $lockedZones[] = ['model' => $zone, 'quantity' => $item['quantity'], 'zone_id' => $zone->id];
             }
 
+            $platformFee = $subtotal * 0.10;
+            $grandTotal = $subtotal + $platformFee;
+
             $settingBcv = \App\Models\Setting::where('key', 'bcv_rate')->first();
             $currentBcvRate = $settingBcv ? (float) $settingBcv->value : 60.50;
 
             $order = Order::create([
                 'user_id' => Auth::id(),
                 'order_number' => 'MISU-' . strtoupper(Str::random(8)),
-                'total_amount' => $subtotal + ($subtotal * 0.10), 
+                'total_amount' => $grandTotal, 
                 'exchange_rate' => $currentBcvRate,
                 'status' => 'pending', 
                 'payment_method' => $request->payment_method,
@@ -255,6 +268,14 @@ class CheckoutController extends Controller
             }
 
             DB::commit();
+
+            // 🚀 ENVIAR CORREO AUTOMÁTICO DE CONFIRMACIÓN
+            try {
+                Mail::to(Auth::user()->email)->send(new PaymentReported($order));
+            } catch (\Exception $mailError) {
+                Log::error("Error enviando correo de pago a " . Auth::user()->email . ": " . $mailError->getMessage());
+            }
+
             return redirect()->route('client.dashboard')->with('success', '¡Pago reportado con éxito!');
 
         } catch (\Exception $e) {
@@ -262,5 +283,4 @@ class CheckoutController extends Controller
             return redirect()->route('checkout.show', $request->event_id)->with('error', $e->getMessage());
         }
     }
-    }
-    
+}

@@ -24,9 +24,28 @@
         .footer { text-align: center; margin-top: 30px; padding: 20px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; }
         .qr-box { margin: 15px auto; padding: 10px; background: white; display: inline-block; border-radius: 10px; border: 1px solid #e2e8f0; }
         .uuid { font-family: monospace; font-size: 11px; letter-spacing: 1px; color: #64748b; margin-top: 10px;}
+        
+        /* Nuevos estilos para montos */
+        .text-emerald { color: #059669; }
+        .text-xs { font-size: 12px; }
     </style>
 </head>
 <body>
+
+    @php
+        // 🚀 CÁLCULOS INTELIGENTES BASADOS EN LA ORDEN
+        $usdPrice = $ticket->eventZone?->price ?? 0;
+        $rate = $ticket->order?->exchange_rate ?? 0;
+        $bsPrice = $usdPrice * $rate;
+        
+        $paymentMethod = $ticket->order?->payment_method ?? 'N/A';
+        $methodDisplay = match($paymentMethod) {
+            'pago_movil' => 'Pago Móvil',
+            'zelle' => 'Zelle',
+            'binance' => 'Binance Pay',
+            default => strtoupper($paymentMethod)
+        };
+    @endphp
 
     <div class="ticket-container">
         <div class="header">
@@ -53,15 +72,34 @@
 
         <div class="col-half">
             <div class="label">Zona del Evento</div>
-            {{-- CORREGIDO: Uso de null-safe para evitar error si no hay zona --}}
             <div class="value value-large">{{ $ticket->eventZone?->venueZone?->name ?? 'Zona General' }}</div>
         </div>
         <div class="col-half">
-            <div class="label">Precio / Factura</div>
+            <div class="label">Valor de la Entrada</div>
             <div class="value">
-                {{-- CORREGIDO: Verificación de existencia de eventZone antes de dar formato al precio --}}
-                REF. {{ number_format($ticket->eventZone?->price ?? 0, 2) }} 
-                <span style="font-size: 12px; color: #64748b; font-weight: normal;">(Orden: {{ $ticket->order->order_number ?? 'N/A' }})</span>
+                REF. {{ number_format($usdPrice, 2) }} 
+                <br>
+                {{-- Mostramos el valor exacto en Bs según la tasa de ese día --}}
+                @if($rate > 0 && $paymentMethod == 'pago_movil')
+                    <span class="text-emerald text-xs" style="font-weight: 900;">Bs. {{ number_format($bsPrice, 2) }}</span>
+                @endif
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        {{-- 🚀 NUEVA SECCIÓN DE FACTURACIÓN --}}
+        <div class="col-half">
+            <div class="label">Orden de Compra</div>
+            <div class="value">#{{ $ticket->order->order_number ?? 'N/A' }}</div>
+        </div>
+        <div class="col-half">
+            <div class="label">Detalles de Pago</div>
+            <div class="value">
+                <span style="font-size: 13px;">{{ $methodDisplay }}</span>
+                @if($rate > 0)
+                    <br><span style="font-size: 10px; color: #64748b; font-weight: normal;">Tasa aplicada: Bs. {{ number_format($rate, 2) }}</span>
+                @endif
             </div>
         </div>
 
@@ -78,10 +116,10 @@
 
         <div class="footer">
             <h3 style="margin: 0 0 5px 0; color: #0f172a; font-size: 16px; letter-spacing: 1px;">ZONA DE ESCANEO</h3>
-            <p style="margin: 0 0 10px 0; font-size: 12px; color: #64748b;">Presenta este código QR desde tu celular o impreso.</p>
+            <p style="margin: 0 0 10px 0; font-size: 12px; color: #64748b;">Presenta este código QR desde tu celular o impreso en puerta.</p>
             
             <div class="qr-box">
-                {{-- Generación de QR con fallback de ID si no hay código único --}}
+                {{-- Generación de QR blindado --}}
                 <img src="data:image/svg+xml;base64,{{ base64_encode(QrCode::format('svg')->size(140)->generate(route('admin.tickets.verify', $ticket->id))) }}" alt="Código QR de la Entrada">
             </div>
             

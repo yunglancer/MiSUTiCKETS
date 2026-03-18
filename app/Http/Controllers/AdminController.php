@@ -9,6 +9,12 @@ use App\Models\Ticket;
 use App\Models\EventZone;
 use Illuminate\Support\Facades\DB;
 
+// 🚀 IMPORTACIONES NUEVAS PARA EL PDF Y LOS CORREOS
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\PaymentApproved;
+use Illuminate\Support\Facades\Log;
+
 class AdminController extends Controller
 {
     public function dashboard()
@@ -64,21 +70,22 @@ class AdminController extends Controller
         return view('admin.tickets.verify', compact('ticket'));
     }
 
-public function markTicketAsUsed($id)
-{
-    $ticket = Ticket::findOrFail($id);
+    public function markTicketAsUsed($id)
+    {
+        $ticket = Ticket::findOrFail($id);
 
-    if ($ticket->status === 'used') {
-        return response()->json(['success' => false, 'message' => '¡ALERTA! Esta entrada ya fue usada.'], 422);
+        if ($ticket->status === 'used') {
+            return response()->json(['success' => false, 'message' => '¡ALERTA! Esta entrada ya fue usada.'], 422);
+        }
+
+        $ticket->update([
+            'status' => 'used',
+            'validated_at' => now(), // Guardamos la hora exacta de entrada
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Entrada validada. ¡Bienvenidos a MiSUJEVA!']);
     }
-
-    $ticket->update([
-        'status' => 'used',
-        'validated_at' => now(), // Guardamos la hora exacta de entrada
-    ]);
-
-    return response()->json(['success' => true, 'message' => 'Entrada validada. ¡Bienvenidos a MiSUJEVA!']);
-}
+    
     public function pendingOrders()
     {
         $orders = Order::with('user')
@@ -89,14 +96,35 @@ public function markTicketAsUsed($id)
         return view('admin.orders.pending', compact('orders'));
     }
 
+    // =========================================================================
+    // 🚀 APROBAR ORDEN: CAMBIA STATUS, GENERA PDF Y ENVÍA CORREO
+    // =========================================================================
     public function approveOrder(Order $order)
     {
-        // 🚀 CAMBIO CLAVE: De 'approved' a 'paid' para que coincida con tu ENUM
+        // 1. Cambiamos el estado de la orden a pagada
         $updated = $order->update(['status' => 'paid']);
 
         if ($updated) {
+            
+            // 2. Cargamos las relaciones necesarias para que la vista del PDF no explote
+            $order->load(['user', 'tickets.event', 'tickets.eventZone.venueZone']);
+            
+            try {
+                // 3. Generamos UN SOLO PDF con todas las entradas de esa orden
+                $pdf = Pdf::loadView('client.tickets.ticket_multiple', ['order' => $order]);
+                $pdfContent = $pdf->output();
+
+                // 4. Enviamos el correo con el PDF adjunto de manera silenciosa
+                Mail::to($order->user->email)->send(new PaymentApproved($order, $pdfContent));
+                
+            } catch (\Exception $e) {
+                // Si el correo falla (ej. se cayó el internet del servidor), igual se aprueba el pago.
+                // Registramos el error en el log para saber qué pasó.
+                Log::error("Orden {$order->order_number} aprobada, pero falló el envío del PDF a {$order->user->email}: " . $e->getMessage());
+            }
+
             return redirect()->route('admin.orders.pending')
-                             ->with('success', "¡Orden #{$order->order_number} marcada como PAGADA!");
+                             ->with('success', "¡Orden #{$order->order_number} marcada como PAGADA y entradas enviadas por correo!");
         }
 
         return back()->with('error', 'No se pudo actualizar el estado de la orden.');

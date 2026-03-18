@@ -40,3 +40,8 @@ Schedule::call(function () {
         });
     }
 })->hourly(); // Se ejecuta automáticamente cada hora
+
+// =========================================================================
+// 💸 ACTUALIZADOR AUTOMÁTICO DE LA TASA BCV
+// =========================================================================
+Schedule::command('bcv:fetch')->twiceDaily(8, 16); // Se ejecuta a las 8:00 AM y 4:00 PM
