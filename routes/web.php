@@ -72,8 +72,8 @@ Route::middleware(['auth', 'role:SuperAdmin|Organizador|Validador'])->prefix('ad
         Route::get('/auditoria', [\App\Http\Controllers\AuditController::class, 'index'])->name('audits.index');
     });
 
-    // Rutas de Validación y Pagos (SuperAdmin y Validador)
-    Route::middleware(['role:SuperAdmin|Validador'])->group(function () {
+    // Rutas de Validación y Pagos (SuperAdmin, Organizador y Validador)
+    Route::middleware(['role:SuperAdmin|Validador|Organizador'])->group(function () {
         Route::get('/pagos/pendientes', [AdminController::class, 'pendingOrders'])->name('orders.pending');
         Route::post('/pagos/{order}/aprobar', [AdminController::class, 'approveOrder'])->name('orders.approve');
         Route::post('/pagos/{order}/rechazar', [AdminController::class, 'rejectOrder'])->name('orders.reject');

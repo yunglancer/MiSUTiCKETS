@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute; 
+use Illuminate\Database\Eloquent\Builder;
 use OwenIt\Auditing\Contracts\Auditable;
 
 class Event extends Model implements Auditable
@@ -24,6 +25,33 @@ class Event extends Model implements Auditable
         'is_featured', 
         'status'
     ];
+    
+    /**
+     * SEGURIDAD CRÍTICA: Global Scope para Organizadores
+     */
+    protected static function booted()
+    {
+        static::addGlobalScope('solo_mis_eventos', function (Builder $builder) {
+            // 1. Si no hay nadie logueado, permitimos que vea la cartelera (invitados)
+            if (!auth()->check()) {
+                return;
+            }
+
+            // 2. REGLA DE ORO: Si la URL NO empieza por /admin, es la vista del cliente.
+            // En la cartelera pública queremos que el cliente vea TODOS los eventos disponibles.
+            if (!request()->is('admin/*') && !request()->is('admin')) {
+                return; 
+            }
+
+            // 3. Si es SuperAdmin dentro del panel, también ve todo
+            if (auth()->user()->hasRole('SuperAdmin')) {
+                return;
+            }
+
+            // 4. Si es un Organizador DENTRO del panel (/admin/...), solo ve lo suyo
+            $builder->where('user_id', auth()->id());
+        });
+    }
 
     // =========================================================================
     // ACCESORES MODERNOS (Para obtener las URLs listas)
