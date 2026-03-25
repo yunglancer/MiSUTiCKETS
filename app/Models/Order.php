@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use OwenIt\Auditing\Contracts\Auditable; // <--- 1. IMPORTAMOS EL CONTRATO DE AUDITORÍA
 
@@ -26,6 +27,28 @@ protected $fillable = [
         'payment_phone',
         'payment_receipt_path',
     ];
+
+    /**
+     * SEGURIDAD CRÍTICA: Solo mostrar órdenes de los eventos del Organizador
+     */
+    protected static function booted()
+    {
+        static::addGlobalScope('access_control', function ($builder) {
+        if (!auth()->check()) return;
+
+        if (request()->is('admin/*')) {
+            // Lógica de Organizador: Ve órdenes de sus eventos
+            if (!auth()->user()->hasRole('SuperAdmin')) {
+                $builder->whereHas('tickets.event', function($q) {
+                    $q->where('user_id', auth()->id());
+                });
+            }
+            } else {
+                // Lógica de Cliente: Ve sus propias compras
+                $builder->where('user_id', auth()->id());
+            }
+        });
+    }
 
     // Una orden pertenece a un usuario
     public function user()

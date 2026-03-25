@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use OwenIt\Auditing\Contracts\Auditable; // <--- 1. IMPORTAMOS EL CONTRATO DE AUDITORÍA
 
 class Ticket extends Model implements Auditable // <--- 2. IMPLEMENTAMOS LA INTERFAZ
@@ -19,6 +20,28 @@ class Ticket extends Model implements Auditable // <--- 2. IMPLEMENTAMOS LA INTE
         'ticket_code',
         'status',
     ];
+
+    /**
+     * SEGURIDAD: Solo mostrar tickets que pertenezcan a eventos del Organizador
+     */
+    protected static function booted()
+    {
+        static::addGlobalScope('ticket_access', function ($builder) {
+        if (!auth()->check()) return;
+
+        if (request()->is('admin/*')) {
+            // Organizador: ve tickets de sus eventos
+            $builder->whereHas('event', function ($q) {
+                $q->where('user_id', auth()->id());
+            });
+            } else {
+                // Cliente: ve tickets de las órdenes que él pagó
+                $builder->whereHas('order', function ($q) {
+                    $q->where('user_id', auth()->id());
+                });
+            }
+        });
+    }
 
     // Un ticket pertenece a una orden
     public function order()

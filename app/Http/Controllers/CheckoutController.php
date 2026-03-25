@@ -31,6 +31,57 @@ class CheckoutController extends Controller
             ],
         ]);
     }
+    // =========================================================================
+    // MÉTODOS DE TAQUILLA (ADMIN/ORGANIZADOR)
+    // =========================================================================
+
+    /**
+     * Muestra la lista de órdenes pendientes.
+     * Gracias al Global Scope que pusimos en el Modelo Order,
+     * el Organizador solo verá sus propios eventos aquí.
+     */
+    public function pendingOrders()
+    {
+        $orders = Order::with('user', 'tickets.event')
+                    ->where('status', 'pending')
+                    ->latest()
+                    ->paginate(15);
+
+        return view('admin.taquilla.pending', compact('orders'));
+    }
+
+    /**
+     * RECHAZAR PAGO (Seguridad Crítica)
+     */
+    public function reject(Order $order)
+    {
+        // Validamos que la orden sea del organizador (Doble capa de seguridad)
+        // Aunque el Global Scope ya lo hace, esto previene accidentes.
+        
+        try {
+            return DB::transaction(function () use ($order) {
+                // 1. Cambiamos el estatus a rechazado
+                $order->update(['status' => 'rejected']);
+
+                // 2. Liberamos los tickets (Devolvemos capacidad a EventZone)
+                // Agrupamos por zona para hacer menos consultas a la BD
+                $ticketGroups = $order->tickets->groupBy('event_zone_id');
+
+                foreach ($ticketGroups as $zoneId => $ticketsInZone) {
+                    $quantityToRelease = $ticketsInZone->count();
+                    
+                    $zone = EventZone::find($zoneId);
+                    if ($zone) {
+                        $zone->increment('capacity', $quantityToRelease);
+                    }
+                }
+
+                return back()->with('success', "Orden #{$order->order_number} rechazada. Se han liberado {$order->tickets->count()} tickets al inventario.");
+            });
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al procesar el rechazo: ' . $e->getMessage());
+        }
+    }
 
     // =========================================================================
     // 1. MUESTRA LA PANTALLA DE SELECCIÓN DE ENTRADAS (Paso 1)
@@ -278,9 +329,13 @@ class CheckoutController extends Controller
 
             return redirect()->route('client.dashboard')->with('success', '¡Pago reportado con éxito!');
 
+            
+
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->route('checkout.show', $request->event_id)->with('error', $e->getMessage());
         }
+
+        
     }
 }

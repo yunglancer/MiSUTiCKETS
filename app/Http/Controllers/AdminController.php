@@ -45,9 +45,7 @@ class AdminController extends Controller
             $eventsQuery->where('user_id', $userId);
 
             // Órdenes Recientes: Solo las que contienen tickets de sus eventos
-            $ordersQuery->whereHas('tickets.event', function($q) use ($userId) {
-                $q->where('user_id', $userId);
-            });
+            $ordersQuery = Order::with(['user', 'tickets.event']);
         }
 
         // 3. Ejecutamos los cálculos
