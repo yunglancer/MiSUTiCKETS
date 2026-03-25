@@ -4,15 +4,22 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use OwenIt\Auditing\Contracts\Auditable; // <--- 1. IMPORTAR EL CONTRATO DE AUDITORÍA
+use OwenIt\Auditing\Contracts\Auditable;
 
-class VenueZone extends Model implements Auditable // <--- 2. IMPLEMENTAR LA INTERFAZ
+class VenueZone extends Model implements Auditable
 {
-    use \OwenIt\Auditing\Auditable; // <--- 3. ACTIVAR EL "ESPÍA" (TRAIT)
+    use \OwenIt\Auditing\Auditable;
 
-    protected $fillable = ['venue_id', 'name'];
+    // Agregamos 'capacity' a la lista de campos permitidos
+    protected $fillable = [
+        'venue_id', 
+        'name', 
+        'capacity'
+    ];
 
-    // Relación inversa: Una zona pertenece a un Recinto
+    /**
+     * Relación inversa: Una zona pertenece a un Recinto
+     */
     public function venue(): BelongsTo
     {
         return $this->belongsTo(Venue::class);
