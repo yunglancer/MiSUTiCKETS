@@ -62,20 +62,33 @@ class EventController extends Controller
             'status' => 'required',
             'zones' => 'nullable|array', 
             'image' => 'nullable|image|max:10240',
+            'hero_image' => 'nullable|image|max:10240',
+            'flyer_image' => 'nullable|image|max:10240',
         ]);
 
         $currentUserId = Auth::id();
 
         try {
             return DB::transaction(function () use ($request, $currentUserId) {
+                $cloudinary = $this->getCloudinaryInstance();
+                
+                // --- Subida de Imágenes a Cloudinary ---
                 $imagePath = null;
                 if ($request->hasFile('image')) {
-                    $cloudinary = $this->getCloudinaryInstance();
-                    $upload = $cloudinary->uploadApi()->upload(
-                        $request->file('image')->getRealPath(),
-                        ['folder' => 'misutickets_events']
-                    );
+                    $upload = $cloudinary->uploadApi()->upload($request->file('image')->getRealPath(), ['folder' => 'misutickets_events']);
                     $imagePath = $upload['secure_url'];
+                }
+
+                $heroPath = null;
+                if ($request->hasFile('hero_image')) {
+                    $uploadHero = $cloudinary->uploadApi()->upload($request->file('hero_image')->getRealPath(), ['folder' => 'misutickets_events/heroes']);
+                    $heroPath = $uploadHero['secure_url'];
+                }
+
+                $flyerPath = null;
+                if ($request->hasFile('flyer_image')) {
+                    $uploadFlyer = $cloudinary->uploadApi()->upload($request->file('flyer_image')->getRealPath(), ['folder' => 'misutickets_events/flyers']);
+                    $flyerPath = $uploadFlyer['secure_url'];
                 }
 
                 $event = new Event();
@@ -85,6 +98,8 @@ class EventController extends Controller
                 $event->description = $request->description;
                 $event->event_date = $request->event_date;
                 $event->image_path = $imagePath;
+                $event->hero_path = $heroPath; // Guardamos en la columna correcta de la DB
+                $event->flyer_path = $flyerPath; // Guardamos en la columna correcta de la DB
                 $event->is_featured = $request->has('is_featured');
                 $event->status = $request->status;
                 $event->category_id = $request->category_id;
@@ -133,10 +148,14 @@ class EventController extends Controller
             'event_date' => 'required|date',
             'status' => 'required|in:Draft,Published,Cancelled',
             'image' => 'nullable|image|max:10240',
+            'hero_image' => 'nullable|image|max:10240',
+            'flyer_image' => 'nullable|image|max:10240',
         ]);
 
         try {
             return DB::transaction(function () use ($request, $event) {
+                $cloudinary = $this->getCloudinaryInstance();
+                
                 $data = [
                     'title' => $request->title,
                     'category_id' => $request->category_id,
@@ -148,13 +167,22 @@ class EventController extends Controller
                     'slug' => Str::slug($request->title) . '-' . $event->id,
                 ];
 
+                // Procesar Imagen Principal
                 if ($request->hasFile('image')) {
-                    $cloudinary = $this->getCloudinaryInstance();
-                    $upload = $cloudinary->uploadApi()->upload(
-                        $request->file('image')->getRealPath(),
-                        ['folder' => 'misutickets_events']
-                    );
+                    $upload = $cloudinary->uploadApi()->upload($request->file('image')->getRealPath(), ['folder' => 'misutickets_events']);
                     $data['image_path'] = $upload['secure_url'];
+                }
+
+                // Procesar Hero/Banner
+                if ($request->hasFile('hero_image')) {
+                    $uploadHero = $cloudinary->uploadApi()->upload($request->file('hero_image')->getRealPath(), ['folder' => 'misutickets_events/heroes']);
+                    $data['hero_path'] = $uploadHero['secure_url']; // Cambiado a hero_path para coincidir con tu DB
+                }
+
+                // Procesar Flyer
+                if ($request->hasFile('flyer_image')) {
+                    $uploadFlyer = $cloudinary->uploadApi()->upload($request->file('flyer_image')->getRealPath(), ['folder' => 'misutickets_events/flyers']);
+                    $data['flyer_path'] = $uploadFlyer['secure_url']; // Cambiado a flyer_path para coincidir con tu DB
                 }
                 
                 $event->update($data);
@@ -162,7 +190,7 @@ class EventController extends Controller
                 if ($request->has('zones')) {
                     EventZone::where('event_id', $event->id)->delete();
                     foreach ($request->zones as $zoneData) {
-                        if (isset($zoneData['is_active'])) {
+                        if (isset($zoneData['venue_zone_id'])) {
                             EventZone::create([
                                 'event_id' => $event->id,
                                 'venue_zone_id' => $zoneData['venue_zone_id'],
@@ -191,7 +219,6 @@ class EventController extends Controller
         return redirect()->route('admin.events.index')->with('success', 'Evento eliminado.');
     }
 
-    // Muestra métricas en el ADMIN
     public function show(Event $event)
     {
         $user = auth()->user();
@@ -221,15 +248,12 @@ class EventController extends Controller
         return view('admin.events.metrics', compact('event', 'statsByZone', 'totalRevenue', 'totalSold'));
     }
 
-    // --- CORREGIDO: Apunta a la vista admin.events.show ---
     public function showPublic($id)
     {
         $event = Event::with(['venue.zones', 'category', 'eventZones'])->findOrFail($id);
-        // Cambié 'events.show' por 'admin.events.show' que es la que existe en tu proyecto
         return view('admin.events.show', compact('event'));
     }
 
-    // Lista eventos con FILTROS en el FRONT
     public function list(Request $request)
     {
         $query = Event::with(['venue', 'category'])
@@ -246,11 +270,8 @@ class EventController extends Controller
                 $q->where('name', $categoriaNombre);
             });
         }
-
         $events = $query->latest()->get();
         $categories = Category::all(); 
-        
-        // Esta vista suele estar en resources/views/events/index.blade.php
         return view('events.index', compact('events', 'categories'));
     }
 }
