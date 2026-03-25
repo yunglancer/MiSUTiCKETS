@@ -64,7 +64,7 @@
                             <button type="button" 
                                 @click="selectedIcon = icon.name"
                                 :class="selectedIcon === icon.name ? 'border-[#FF6600] bg-[#FF6600]/5 text-[#FF6600] shadow-md' : 'border-slate-100 bg-slate-50 text-slate-400 hover:border-slate-200'"
-                                class="flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all duration-200 group">
+                                class="flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all duration-200 group relative">
                                 
                                 <span class="material-icons text-2xl mb-1" x-text="icon.name"></span>
                                 <span class="text-[8px] font-black uppercase tracking-tighter" x-text="icon.label"></span>
@@ -79,6 +79,8 @@
 
                     @error('icon') <p class="text-rose-500 text-[10px] font-bold mt-4 ml-1 uppercase">{{ $message }}</p> @enderror
                 </div>
+            </div>
+        </div>
 
         {{-- Footer del Formulario --}}
         <div class="bg-slate-50/50 p-8 border-t border-slate-100 flex justify-end items-center gap-4">
