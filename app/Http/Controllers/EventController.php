@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\Category;
-use App\Models\Venue;    
+use App\Models\Venue;
 use App\Models\EventZone;
 use App\Models\Ticket;
 use App\Models\Order;
@@ -79,6 +79,7 @@ class EventController extends Controller
                 if ($capacidadSolicitada > $zonaReal->capacity) {
                     return back()->withInput()->with('error', "Error en Zona '{$zonaReal->name}': La capacidad física es de {$zonaReal->capacity} personas. No puedes asignar {$capacidadSolicitada} tickets.");
                 }
+                
                 $totalTicketsEvento += $capacidadSolicitada;
             }
         }
@@ -88,10 +89,8 @@ class EventController extends Controller
             return back()->withInput()->with('error', "Error de Aforo Global: El recinto '{$venue->name}' tiene un límite total de {$venue->capacity} personas, pero la suma de tus zonas da {$totalTicketsEvento}.");
         }
 
-        $currentUserId = Auth::id();
-
         try {
-            return DB::transaction(function () use ($request, $currentUserId) {
+            return DB::transaction(function () use ($request) {
                 $cloudinary = $this->getCloudinaryInstance();
                 
                 $imagePath = null;
@@ -113,7 +112,7 @@ class EventController extends Controller
                 }
 
                 $event = new Event();
-                $event->user_id = $currentUserId;
+                $event->user_id = Auth::id();
                 $event->title = $request->title;
                 $event->slug = Str::slug($request->title) . '-' . time();
                 $event->description = $request->description;
@@ -206,7 +205,6 @@ class EventController extends Controller
                     'status' => $request->status,
                     'description' => $request->description,
                     'is_featured' => $request->has('is_featured'),
-                    'slug' => Str::slug($request->title) . '-' . $event->id,
                 ];
 
                 if ($request->hasFile('image')) {
@@ -248,7 +246,6 @@ class EventController extends Controller
         }
     }
 
-    // ... Resto de funciones (show, destroy, list, etc.) se mantienen igual ...
     public function show(Event $event)
     {
         $user = auth()->user();
@@ -288,6 +285,8 @@ class EventController extends Controller
         return redirect()->route('admin.events.index')->with('success', 'Evento eliminado.');
     }
 
+    // --- FUNCIONES PÚBLICAS DE JEAN Y ELÍAS ---
+
     public function showPublic($id)
     {
         $event = Event::with(['venue.zones', 'category', 'eventZones'])->findOrFail($id);
@@ -309,8 +308,10 @@ class EventController extends Controller
                 $q->where('name', $categoriaNombre);
             });
         }
+
         $events = $query->latest()->get();
         $categories = Category::all(); 
+        
         return view('events.index', compact('events', 'categories'));
     }
 }

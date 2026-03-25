@@ -22,7 +22,7 @@ Route::get('/vitrina', function () {
 // ==========================================
 Route::get('/', [StoreController::class, 'landing'])->name('home');
 
-// Rutas de eventos con filtros aplicados en EventController
+// Rutas de eventos para el público general
 Route::get('/eventos', [EventController::class, 'list'])->name('events.index');
 Route::get('/eventos/{id}', [EventController::class, 'showPublic'])->name('events.show');
 
@@ -92,7 +92,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
-    // Panel de Mis Compras y Proceso de Pago
+    // Panel del Cliente y Proceso de Pago (Checkout)
     Route::get('/mi-panel', [ClientController::class, 'dashboard'])->name('client.dashboard');
     Route::get('/mi-panel/ticket/{id}/descargar', [ClientController::class, 'downloadTicket'])->name('client.ticket.download');
     Route::get('/checkout/{event}', [CheckoutController::class, 'show'])->name('checkout.show');

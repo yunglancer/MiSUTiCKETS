@@ -4,11 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use OwenIt\Auditing\Contracts\Auditable; // 1. IMPORTAR EL CONTRATO DE AUDITORÍA
+use OwenIt\Auditing\Contracts\Auditable;
 
-class VenueZone extends Model implements Auditable // 2. IMPLEMENTAR LA INTERFAZ
+class VenueZone extends Model implements Auditable
 {
-    use \OwenIt\Auditing\Auditable; // 3. ACTIVAR EL TRAIT DE AUDITORÍA
+    use \OwenIt\Auditing\Auditable;
 
     // Agregamos 'capacity' para permitir el registro del aforo físico por zona
     protected $fillable = [

@@ -10,7 +10,6 @@ class VenueController extends Controller
 {
     public function index()
     {
-        // Traemos los recintos paginados para mantener el orden
         $venues = Venue::with('zones')->latest()->paginate(10);
         return view('admin.venues.index', compact('venues'));
     }
@@ -66,7 +65,6 @@ class VenueController extends Controller
 
     public function edit(Venue $venue)
     {
-        // Cargamos las zonas para asegurarnos de que estén disponibles en la vista
         $venue->load('zones');
         return view('admin.venues.edit', compact('venue'));
     }
@@ -125,16 +123,13 @@ class VenueController extends Controller
 
     public function destroy(Venue $venue)
     {
-        // Verificar si hay eventos asociados antes de borrar
         if ($venue->events()->exists()) {
             return redirect()->route('admin.venues.index')
                 ->with('error', 'No se puede eliminar el recinto porque tiene eventos asociados.');
         }
 
         $venue->delete();
-
-        return redirect()->route('admin.venues.index')
-            ->with('success', 'Recinto eliminado.');
+        return redirect()->route('admin.venues.index')->with('success', 'Recinto eliminado.');
     }
 
     public function show(Venue $venue)

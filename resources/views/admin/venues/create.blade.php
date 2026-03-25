@@ -16,7 +16,7 @@
         </div>
     </div>
 
-    {{-- BLOQUE DE ERRORES --}}
+    {{-- BLOQUE DE ERRORES (CRUCIAL PARA VER QUÉ FALLA) --}}
     @if(session('error'))
         <div class="mb-6 p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-600 shadow-sm animate-shake">
             <span class="material-icons">error_outline</span>
@@ -90,6 +90,7 @@
                     <div class="space-y-4">
                         <template x-for="(zone, index) in zones" :key="index">
                             <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end animate-fade-in bg-slate-50/50 p-4 rounded-2xl border border-dashed border-slate-200">
+                                
                                 <div class="sm:col-span-7">
                                     <label class="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Nombre de Zona</label>
                                     <input type="text" :name="'zones['+index+'][name]'" x-model="zone.name" placeholder="Ej: VIP, Platea..." 
