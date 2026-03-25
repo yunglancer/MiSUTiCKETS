@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\Category;
-use App\Models\Venue;    
+use App\Models\Venue;
 use App\Models\EventZone;
 use App\Models\Ticket;
 use App\Models\Order;
@@ -60,48 +60,81 @@ class EventController extends Controller
             'venue_id' => 'required|exists:venues,id',       
             'event_date' => 'required', 
             'status' => 'required',
-            'zones' => 'nullable|array', 
+            'zones' => 'required|array', 
             'image' => 'nullable|image|max:10240',
+            'hero_image' => 'nullable|image|max:10240',
+            'flyer_image' => 'nullable|image|max:10240',
         ]);
 
-        $currentUserId = Auth::id();
+        // --- LÓGICA DE ELÍAS: VALIDACIÓN DE AFORO ESTRICTA ---
+        $venue = Venue::with('zones')->find($request->venue_id);
+        $totalTicketsEvento = 0;
+
+        foreach ($request->zones as $zoneData) {
+            if (isset($zoneData['venue_zone_id']) && isset($zoneData['capacity'])) {
+                $zonaReal = $venue->zones->where('id', $zoneData['venue_zone_id'])->first();
+                $capacidadSolicitada = (int)$zoneData['capacity'];
+
+                // Validación 1: No exceder la capacidad física de la zona específica
+                if ($capacidadSolicitada > $zonaReal->capacity) {
+                    return back()->withInput()->with('error', "Error en Zona '{$zonaReal->name}': La capacidad física es de {$zonaReal->capacity} personas. No puedes asignar {$capacidadSolicitada} tickets.");
+                }
+                
+                $totalTicketsEvento += $capacidadSolicitada;
+            }
+        }
+
+        // Validación 2: No exceder la capacidad total del recinto
+        if ($totalTicketsEvento > $venue->capacity) {
+            return back()->withInput()->with('error', "Error de Aforo Global: El recinto '{$venue->name}' tiene un límite total de {$venue->capacity} personas, pero la suma de tus zonas da {$totalTicketsEvento}.");
+        }
 
         try {
-            return DB::transaction(function () use ($request, $currentUserId) {
+            return DB::transaction(function () use ($request) {
+                $cloudinary = $this->getCloudinaryInstance();
+                
                 $imagePath = null;
                 if ($request->hasFile('image')) {
-                    $cloudinary = $this->getCloudinaryInstance();
-                    $upload = $cloudinary->uploadApi()->upload(
-                        $request->file('image')->getRealPath(),
-                        ['folder' => 'misutickets_events']
-                    );
+                    $upload = $cloudinary->uploadApi()->upload($request->file('image')->getRealPath(), ['folder' => 'misutickets_events']);
                     $imagePath = $upload['secure_url'];
                 }
 
+                $heroPath = null;
+                if ($request->hasFile('hero_image')) {
+                    $uploadHero = $cloudinary->uploadApi()->upload($request->file('hero_image')->getRealPath(), ['folder' => 'misutickets_events/heroes']);
+                    $heroPath = $uploadHero['secure_url'];
+                }
+
+                $flyerPath = null;
+                if ($request->hasFile('flyer_image')) {
+                    $uploadFlyer = $cloudinary->uploadApi()->upload($request->file('flyer_image')->getRealPath(), ['folder' => 'misutickets_events/flyers']);
+                    $flyerPath = $uploadFlyer['secure_url'];
+                }
+
                 $event = new Event();
-                $event->user_id = $currentUserId;
+                $event->user_id = Auth::id();
                 $event->title = $request->title;
                 $event->slug = Str::slug($request->title) . '-' . time();
                 $event->description = $request->description;
                 $event->event_date = $request->event_date;
                 $event->image_path = $imagePath;
+                $event->hero_path = $heroPath;
+                $event->flyer_path = $flyerPath;
                 $event->is_featured = $request->has('is_featured');
                 $event->status = $request->status;
                 $event->category_id = $request->category_id;
                 $event->venue_id = $request->venue_id;
                 $event->save();
 
-                if ($request->has('zones') && is_array($request->zones)) {
-                    foreach ($request->zones as $zoneData) {
-                        if (isset($zoneData['venue_zone_id']) && isset($zoneData['price'])) {
-                            EventZone::create([
-                                'event_id' => $event->id,
-                                'venue_zone_id' => $zoneData['venue_zone_id'],
-                                'price' => $zoneData['price'] ?? 0,
-                                'capacity' => $zoneData['capacity'] ?? 0,
-                                'is_active' => true,
-                            ]);
-                        }
+                foreach ($request->zones as $zoneData) {
+                    if (isset($zoneData['venue_zone_id']) && ($zoneData['capacity'] ?? 0) > 0) {
+                        EventZone::create([
+                            'event_id' => $event->id,
+                            'venue_zone_id' => $zoneData['venue_zone_id'],
+                            'price' => $zoneData['price'] ?? 0,
+                            'capacity' => $zoneData['capacity'],
+                            'is_active' => true,
+                        ]);
                     }
                 }
 
@@ -130,13 +163,40 @@ class EventController extends Controller
             'title' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'venue_id' => 'required|exists:venues,id',
-            'event_date' => 'required|date',
-            'status' => 'required|in:Draft,Published,Cancelled',
+            'event_date' => 'required',
+            'status' => 'required',
             'image' => 'nullable|image|max:10240',
+            'hero_image' => 'nullable|image|max:10240',
+            'flyer_image' => 'nullable|image|max:10240',
         ]);
+
+        // --- LÓGICA DE ELÍAS: VALIDACIÓN DE AFORO EN UPDATE ---
+        $venue = Venue::with('zones')->find($request->venue_id);
+        $totalTicketsUpdate = 0;
+
+        if ($request->has('zones')) {
+            foreach ($request->zones as $zoneData) {
+                // Verificamos si la zona está activa o se incluyó en el update
+                if (isset($zoneData['venue_zone_id'])) {
+                    $zonaReal = $venue->zones->where('id', $zoneData['venue_zone_id'])->first();
+                    $capacidadIngresada = (int)$zoneData['capacity'];
+
+                    if ($capacidadIngresada > $zonaReal->capacity) {
+                        return back()->withInput()->with('error', "Error en '{$zonaReal->name}': Estás intentando asignar {$capacidadIngresada} pero el espacio físico solo permite {$zonaReal->capacity}.");
+                    }
+                    $totalTicketsUpdate += $capacidadIngresada;
+                }
+            }
+        }
+
+        if ($totalTicketsUpdate > $venue->capacity) {
+            return back()->withInput()->with('error', "El aforo total del evento ({$totalTicketsUpdate}) supera la capacidad máxima del recinto ({$venue->capacity}).");
+        }
 
         try {
             return DB::transaction(function () use ($request, $event) {
+                $cloudinary = $this->getCloudinaryInstance();
+                
                 $data = [
                     'title' => $request->title,
                     'category_id' => $request->category_id,
@@ -145,16 +205,21 @@ class EventController extends Controller
                     'status' => $request->status,
                     'description' => $request->description,
                     'is_featured' => $request->has('is_featured'),
-                    'slug' => Str::slug($request->title) . '-' . $event->id,
                 ];
 
                 if ($request->hasFile('image')) {
-                    $cloudinary = $this->getCloudinaryInstance();
-                    $upload = $cloudinary->uploadApi()->upload(
-                        $request->file('image')->getRealPath(),
-                        ['folder' => 'misutickets_events']
-                    );
+                    $upload = $cloudinary->uploadApi()->upload($request->file('image')->getRealPath(), ['folder' => 'misutickets_events']);
                     $data['image_path'] = $upload['secure_url'];
+                }
+
+                if ($request->hasFile('hero_image')) {
+                    $uploadHero = $cloudinary->uploadApi()->upload($request->file('hero_image')->getRealPath(), ['folder' => 'misutickets_events/heroes']);
+                    $data['hero_path'] = $uploadHero['secure_url'];
+                }
+
+                if ($request->hasFile('flyer_image')) {
+                    $uploadFlyer = $cloudinary->uploadApi()->upload($request->file('flyer_image')->getRealPath(), ['folder' => 'misutickets_events/flyers']);
+                    $data['flyer_path'] = $uploadFlyer['secure_url'];
                 }
                 
                 $event->update($data);
@@ -162,7 +227,7 @@ class EventController extends Controller
                 if ($request->has('zones')) {
                     EventZone::where('event_id', $event->id)->delete();
                     foreach ($request->zones as $zoneData) {
-                        if (isset($zoneData['is_active'])) {
+                        if (isset($zoneData['venue_zone_id']) && ($zoneData['capacity'] ?? 0) > 0) {
                             EventZone::create([
                                 'event_id' => $event->id,
                                 'venue_zone_id' => $zoneData['venue_zone_id'],
@@ -181,6 +246,35 @@ class EventController extends Controller
         }
     }
 
+    public function show(Event $event)
+    {
+        $user = auth()->user();
+        if (!$user->hasRole('SuperAdmin') && $event->user_id !== $user->id) {
+            abort(403);
+        }
+
+        $statsByZone = $event->eventZones->map(function ($eventZone) use ($event) {
+            $soldTickets = Ticket::where('event_id', $event->id)
+                ->where('venue_zone_id', $eventZone->venue_zone_id)
+                ->whereHas('order', function($q) {
+                    $q->where('status', 'paid');
+                })->count();
+
+            return [
+                'name' => $eventZone->venueZone->name,
+                'capacity' => $eventZone->capacity,
+                'sold' => $soldTickets,
+                'percentage' => ($eventZone->capacity > 0) ? ($soldTickets * 100 / $eventZone->capacity) : 0,
+                'revenue' => $soldTickets * $eventZone->price 
+            ];
+        });
+
+        $totalRevenue = $statsByZone->sum('revenue');
+        $totalSold = $statsByZone->sum('sold');
+
+        return view('admin.events.metrics', compact('event', 'statsByZone', 'totalRevenue', 'totalSold'));
+    }
+
     public function destroy(Event $event)
     {
         if (!auth()->user()->hasRole('SuperAdmin') && $event->user_id !== auth()->id()) {
@@ -191,49 +285,17 @@ class EventController extends Controller
         return redirect()->route('admin.events.index')->with('success', 'Evento eliminado.');
     }
 
-    // Muestra métricas en el ADMIN
-    public function show(Event $event)
-    {
-        $user = auth()->user();
-        if (!$user->hasRole('SuperAdmin') && $event->user_id !== $user->id) {
-            abort(403);
-        }
+    // --- FUNCIONES PÚBLICAS DE JEAN Y ELÍAS ---
 
-        $statsByZone = $event->venue->zones->map(function ($zone) use ($event) {
-            $soldTickets = Ticket::where('event_id', $event->id)
-                                ->where('venue_zone_id', $zone->id)
-                                ->whereHas('order', function($q) {
-                                    $q->where('status', 'paid');
-                                })->count();
-
-            return [
-                'name' => $zone->name,
-                'capacity' => $zone->capacity,
-                'sold' => $soldTickets,
-                'percentage' => ($zone->capacity > 0) ? ($soldTickets * 100 / $zone->capacity) : 0,
-                'revenue' => $soldTickets * $zone->price 
-            ];
-        });
-
-        $totalRevenue = $statsByZone->sum('revenue');
-        $totalSold = $statsByZone->sum('sold');
-
-        return view('admin.events.metrics', compact('event', 'statsByZone', 'totalRevenue', 'totalSold'));
-    }
-
-    // --- CORREGIDO: Apunta a la vista admin.events.show ---
     public function showPublic($id)
     {
         $event = Event::with(['venue.zones', 'category', 'eventZones'])->findOrFail($id);
-        // Cambié 'events.show' por 'admin.events.show' que es la que existe en tu proyecto
         return view('admin.events.show', compact('event'));
     }
 
-    // Lista eventos con FILTROS en el FRONT
     public function list(Request $request)
     {
-        $query = Event::with(['venue', 'category'])
-                      ->where('status', 'Published');
+        $query = Event::with(['venue', 'category'])->where('status', 'Published');
 
         if ($request->filled('buscar')) {
             $buscar = $request->input('buscar');
@@ -250,7 +312,6 @@ class EventController extends Controller
         $events = $query->latest()->get();
         $categories = Category::all(); 
         
-        // Esta vista suele estar en resources/views/events/index.blade.php
         return view('events.index', compact('events', 'categories'));
     }
 }

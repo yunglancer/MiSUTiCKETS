@@ -5,16 +5,25 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute; 
 use Illuminate\Database\Eloquent\Builder;
-use OwenIt\Auditing\Contracts\Auditable; // <--- 1. IMPORTAMOS EL CONTRATO DE AUDITORÍA
+use OwenIt\Auditing\Contracts\Auditable;
 
-class Event extends Model implements Auditable // <--- 2. IMPLEMENTAMOS LA INTERFAZ
+class Event extends Model implements Auditable
 {
-    use \OwenIt\Auditing\Auditable; // <--- 3. ACTIVAMOS EL "ESPÍA" (TRAIT)
+    use \OwenIt\Auditing\Auditable;
 
-    // Agregué 'user_id' aquí para que no te dé error al crear eventos
     protected $fillable = [
-        'category_id', 'venue_id', 'user_id', 'title', 'slug', 'description', 
-        'image_path', 'event_date', 'is_featured', 'status'
+        'category_id', 
+        'venue_id', 
+        'user_id', 
+        'title', 
+        'slug', 
+        'description', 
+        'image_path', 
+        'hero_path',  // Nombre real en tu DB
+        'flyer_path', // Nombre real en tu DB
+        'event_date', 
+        'is_featured', 
+        'status'
     ];
     
     /**
@@ -22,7 +31,7 @@ class Event extends Model implements Auditable // <--- 2. IMPLEMENTAMOS LA INTER
      */
     protected static function booted()
     {
-        static::addGlobalScope('solo_mis_eventos', function ($builder) {
+        static::addGlobalScope('solo_mis_eventos', function (Builder $builder) {
             // 1. Si no hay nadie logueado, permitimos que vea la cartelera (invitados)
             if (!auth()->check()) {
                 return;
@@ -45,24 +54,42 @@ class Event extends Model implements Auditable // <--- 2. IMPLEMENTAMOS LA INTER
     }
 
     // =========================================================================
-    // 1. ACCESOR MODERNO (El que Laravel 12 ama)
+    // ACCESORES MODERNOS (Para obtener las URLs listas)
     // =========================================================================
+    
+    // Imagen Principal (Miniatura)
     protected function imageUrl(): Attribute
     {
-        return Attribute::get(function () {
-            // Si no hay nada en la base de datos
-            if (!$this->image_path) {
-                return 'https://ui-avatars.com/api/?name=Evento&background=f1f5f9&color=94a3b8&size=512';
-            }
+        return Attribute::get(fn () => $this->resolveImageUrl($this->image_path));
+    }
 
-            // Si es un link de Cloudinary u otro servicio externo
-            if (str_starts_with($this->image_path, 'http')) {
-                return $this->image_path;
-            }
+    // Imagen Hero (Banner Superior)
+    protected function heroUrl(): Attribute
+    {
+        return Attribute::get(fn () => $this->resolveImageUrl($this->hero_path, 'Hero'));
+    }
 
-            // Si es una imagen local en storage
-            return asset('storage/' . $this->image_path);
-        });
+    // Imagen Flyer (Poster Lateral)
+    protected function flyerUrl(): Attribute
+    {
+        return Attribute::get(fn () => $this->resolveImageUrl($this->flyer_path, 'Flyer'));
+    }
+
+    /**
+     * Lógica común para resolver URLs de imágenes
+     */
+    private function resolveImageUrl($path, $placeholder = 'Evento')
+    {
+        if (!$path) {
+            // Placeholder elegante si no hay imagen
+            return "https://placehold.co/1200x600/1e293b/FFFFFF?text={$placeholder}";
+        }
+
+        if (str_starts_with($path, 'http')) {
+            return $path;
+        }
+
+        return asset('storage/' . $path);
     }
 
     // =========================================================================
@@ -84,7 +111,6 @@ class Event extends Model implements Auditable // <--- 2. IMPLEMENTAMOS LA INTER
         return $this->hasMany(EventZone::class);
     }
 
-    // Relación: Un evento pertenece a un usuario (el creador/organizador)
     public function user()
     {
         return $this->belongsTo(User::class);
