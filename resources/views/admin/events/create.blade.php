@@ -14,7 +14,7 @@
         </a>
     </div>
 
-    {{-- BLOQUE DE ERRORES: Vital para saber por qué no se guarda --}}
+    {{-- BLOQUE DE ERRORES --}}
     @if ($errors->any())
         <div class="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-2xl">
             <div class="flex items-center gap-2 text-rose-800 mb-2">
@@ -158,20 +158,44 @@
                 </div>
             </div>
 
-            <div class="border-t border-slate-100 pt-6">
-                <label class="block text-[10px] font-black text-slate-800 uppercase tracking-widest mb-2 ml-1">Imagen de Portada</label>
+            {{-- SECCIÓN DE IMÁGENES --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 border-t border-slate-100 pt-6">
                 
-                <div id="preview-container" class="hidden mb-4">
-                    <div class="relative w-full md:w-72 h-44 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 overflow-hidden group">
-                        <img id="image-preview" src="#" alt="Vista previa" class="w-full h-full object-cover">
-                        <button type="button" onclick="removeImage()" class="absolute top-3 right-3 bg-white/90 p-2 rounded-xl shadow-sm hover:bg-red-50 hover:text-red-600 text-slate-500 transition-all flex items-center justify-center">
-                            <span class="material-icons text-lg">delete_outline</span>
-                        </button>
+                {{-- Imagen de Portada (Mini) --}}
+                <div class="space-y-3">
+                    <label class="block text-[10px] font-black text-slate-800 uppercase tracking-widest ml-1">Portada (Mini)</label>
+                    <div id="preview-main" class="hidden mb-2">
+                        <div class="relative w-full h-32 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 overflow-hidden">
+                            <img id="img-main" src="#" class="w-full h-full object-cover">
+                        </div>
                     </div>
+                    <input type="file" name="image" onchange="preview(this, 'main')" accept="image/*"
+                           class="block w-full text-[10px] text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer">
                 </div>
 
-                <input type="file" name="image" id="image-input" accept="image/*"
-                       class="block w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-xs file:font-black file:uppercase file:tracking-widest file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 transition-colors cursor-pointer">
+                {{-- Imagen Hero (Banner) --}}
+                <div class="space-y-3">
+                    <label class="block text-[10px] font-black text-slate-800 uppercase tracking-widest ml-1">Banner Hero (Ancho)</label>
+                    <div id="preview-hero" class="hidden mb-2">
+                        <div class="relative w-full h-32 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 overflow-hidden">
+                            <img id="img-hero" src="#" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                    <input type="file" name="hero_image" onchange="preview(this, 'hero')" accept="image/*"
+                           class="block w-full text-[10px] text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer">
+                </div>
+
+                {{-- Imagen Flyer (Poster) --}}
+                <div class="space-y-3">
+                    <label class="block text-[10px] font-black text-slate-800 uppercase tracking-widest ml-1">Flyer (Vertical)</label>
+                    <div id="preview-flyer" class="hidden mb-2">
+                        <div class="relative w-full h-32 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 overflow-hidden">
+                            <img id="img-flyer" src="#" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                    <input type="file" name="flyer_image" onchange="preview(this, 'flyer')" accept="image/*"
+                           class="block w-full text-[10px] text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer">
+                </div>
             </div>
 
             <div class="flex items-center ml-1 bg-slate-50 p-4 rounded-2xl border border-slate-100 w-max">
@@ -192,7 +216,6 @@
     function eventForm() {
         return {
             zones: [],
-            // Al iniciar, si ya había un venue seleccionado (por error de validación), cargamos sus zonas
             init() {
                 const initialVenue = document.querySelector('select[name="venue_id"]').value;
                 if (initialVenue) {
@@ -215,23 +238,16 @@
         }
     }
 
-    // Lógica de Previsualización de Imagen
-    const imageInput = document.getElementById('image-input');
-    const previewContainer = document.getElementById('preview-container');
-    const previewImage = document.getElementById('image-preview');
-
-    imageInput.onchange = evt => {
-        const [file] = imageInput.files;
+    // Lógica Unificada de Previsualización
+    function preview(input, type) {
+        const container = document.getElementById(`preview-${type}`);
+        const image = document.getElementById(`img-${type}`);
+        const [file] = input.files;
+        
         if (file) {
-            previewContainer.classList.remove('hidden');
-            previewImage.src = URL.createObjectURL(file);
+            container.classList.remove('hidden');
+            image.src = URL.createObjectURL(file);
         }
-    }
-
-    function removeImage() {
-        imageInput.value = "";
-        previewContainer.classList.add('hidden');
-        previewImage.src = "#";
     }
 </script>
 @endsection
