@@ -66,7 +66,7 @@ class EventController extends Controller
             'flyer_image' => 'nullable|image|max:10240',
         ]);
 
-        // --- LÓGICA DE ELÍAS: VALIDACIÓN DE AFORO ---
+        // --- LÓGICA DE ELÍAS: VALIDACIÓN DE AFORO ESTRICTA ---
         $venue = Venue::with('zones')->find($request->venue_id);
         $totalTicketsEvento = 0;
 
@@ -75,21 +75,22 @@ class EventController extends Controller
                 $zonaReal = $venue->zones->where('id', $zoneData['venue_zone_id'])->first();
                 $capacidadSolicitada = (int)$zoneData['capacity'];
 
+                // Validación 1: No exceder la capacidad física de la zona específica
                 if ($capacidadSolicitada > $zonaReal->capacity) {
-                    return back()->withInput()->with('error', "Error de Aforo: La zona '{$zonaReal->name}' solo tiene capacidad para {$zonaReal->capacity} personas físicas. No puedes asignar {$capacidadSolicitada} tickets.");
+                    return back()->withInput()->with('error', "Error en Zona '{$zonaReal->name}': La capacidad física es de {$zonaReal->capacity} personas. No puedes asignar {$capacidadSolicitada} tickets.");
                 }
                 
                 $totalTicketsEvento += $capacidadSolicitada;
             }
         }
 
+        // Validación 2: No exceder la capacidad total del recinto
         if ($totalTicketsEvento > $venue->capacity) {
-            return back()->withInput()->with('error', "Error Global: El recinto tiene un aforo máximo de {$venue->capacity}, pero tu selección de zonas suma {$totalTicketsEvento}.");
+            return back()->withInput()->with('error', "Error de Aforo Global: El recinto '{$venue->name}' tiene un límite total de {$venue->capacity} personas, pero la suma de tus zonas da {$totalTicketsEvento}.");
         }
 
         try {
             return DB::transaction(function () use ($request) {
-                // Mantenemos la instancia de Cloudinary de la rama principal
                 $cloudinary = $this->getCloudinaryInstance();
                 
                 $imagePath = null;
@@ -117,8 +118,8 @@ class EventController extends Controller
                 $event->description = $request->description;
                 $event->event_date = $request->event_date;
                 $event->image_path = $imagePath;
-                $event->hero_path = $heroPath; 
-                $event->flyer_path = $flyerPath; 
+                $event->hero_path = $heroPath;
+                $event->flyer_path = $flyerPath;
                 $event->is_featured = $request->has('is_featured');
                 $event->status = $request->status;
                 $event->category_id = $request->category_id;
@@ -175,12 +176,13 @@ class EventController extends Controller
 
         if ($request->has('zones')) {
             foreach ($request->zones as $zoneData) {
-                if (isset($zoneData['is_active'])) {
+                // Verificamos si la zona está activa o se incluyó en el update
+                if (isset($zoneData['venue_zone_id'])) {
                     $zonaReal = $venue->zones->where('id', $zoneData['venue_zone_id'])->first();
                     $capacidadIngresada = (int)$zoneData['capacity'];
 
                     if ($capacidadIngresada > $zonaReal->capacity) {
-                        return back()->withInput()->with('error', "Error en {$zonaReal->name}: La capacidad física es de {$zonaReal->capacity}. No puedes poner {$capacidadIngresada}.");
+                        return back()->withInput()->with('error', "Error en '{$zonaReal->name}': Estás intentando asignar {$capacidadIngresada} pero el espacio físico solo permite {$zonaReal->capacity}.");
                     }
                     $totalTicketsUpdate += $capacidadIngresada;
                 }
@@ -188,7 +190,7 @@ class EventController extends Controller
         }
 
         if ($totalTicketsUpdate > $venue->capacity) {
-            return back()->withInput()->with('error', "El total ($totalTicketsUpdate) excede la capacidad total permitida del recinto ({$venue->capacity}).");
+            return back()->withInput()->with('error', "El aforo total del evento ({$totalTicketsUpdate}) supera la capacidad máxima del recinto ({$venue->capacity}).");
         }
 
         try {
@@ -212,12 +214,12 @@ class EventController extends Controller
 
                 if ($request->hasFile('hero_image')) {
                     $uploadHero = $cloudinary->uploadApi()->upload($request->file('hero_image')->getRealPath(), ['folder' => 'misutickets_events/heroes']);
-                    $data['hero_path'] = $uploadHero['secure_url']; 
+                    $data['hero_path'] = $uploadHero['secure_url'];
                 }
 
                 if ($request->hasFile('flyer_image')) {
                     $uploadFlyer = $cloudinary->uploadApi()->upload($request->file('flyer_image')->getRealPath(), ['folder' => 'misutickets_events/flyers']);
-                    $data['flyer_path'] = $uploadFlyer['secure_url']; 
+                    $data['flyer_path'] = $uploadFlyer['secure_url'];
                 }
                 
                 $event->update($data);
@@ -225,7 +227,7 @@ class EventController extends Controller
                 if ($request->has('zones')) {
                     EventZone::where('event_id', $event->id)->delete();
                     foreach ($request->zones as $zoneData) {
-                        if (isset($zoneData['venue_zone_id'])) {
+                        if (isset($zoneData['venue_zone_id']) && ($zoneData['capacity'] ?? 0) > 0) {
                             EventZone::create([
                                 'event_id' => $event->id,
                                 'venue_zone_id' => $zoneData['venue_zone_id'],
@@ -244,16 +246,6 @@ class EventController extends Controller
         }
     }
 
-    public function destroy(Event $event)
-    {
-        if (!auth()->user()->hasRole('SuperAdmin') && $event->user_id !== auth()->id()) {
-            return abort(403, 'No tienes permiso para eliminar este evento.');
-        }
-
-        $event->delete();
-        return redirect()->route('admin.events.index')->with('success', 'Evento eliminado.');
-    }
-
     public function show(Event $event)
     {
         $user = auth()->user();
@@ -263,10 +255,10 @@ class EventController extends Controller
 
         $statsByZone = $event->eventZones->map(function ($eventZone) use ($event) {
             $soldTickets = Ticket::where('event_id', $event->id)
-                                ->where('venue_zone_id', $eventZone->venue_zone_id)
-                                ->whereHas('order', function($q) {
-                                    $q->where('status', 'paid');
-                                })->count();
+                ->where('venue_zone_id', $eventZone->venue_zone_id)
+                ->whereHas('order', function($q) {
+                    $q->where('status', 'paid');
+                })->count();
 
             return [
                 'name' => $eventZone->venueZone->name,
@@ -283,7 +275,17 @@ class EventController extends Controller
         return view('admin.events.metrics', compact('event', 'statsByZone', 'totalRevenue', 'totalSold'));
     }
 
-    // --- FUNCIONES PÚBLICAS DE JEAN SALVADAS DEL CONFLICTO ---
+    public function destroy(Event $event)
+    {
+        if (!auth()->user()->hasRole('SuperAdmin') && $event->user_id !== auth()->id()) {
+            return abort(403, 'No tienes permiso para eliminar este evento.');
+        }
+
+        $event->delete();
+        return redirect()->route('admin.events.index')->with('success', 'Evento eliminado.');
+    }
+
+    // --- FUNCIONES PÚBLICAS DE JEAN Y ELÍAS ---
 
     public function showPublic($id)
     {
@@ -293,8 +295,20 @@ class EventController extends Controller
 
     public function list(Request $request)
     {
-        // Reconstrucción segura de la función que cortó el merge
-        $query = Event::query()->where('status', 'Published');
+        $query = Event::with(['venue', 'category'])->where('status', 'Published');
+
+        if ($request->filled('buscar')) {
+            $buscar = $request->input('buscar');
+            $query->where('title', 'LIKE', "%{$buscar}%");
+        }
+
+        if ($request->filled('categoria')) {
+            $categoriaNombre = $request->input('categoria');
+            $query->whereHas('category', function($q) use ($categoriaNombre) {
+                $q->where('name', $categoriaNombre);
+            });
+        }
+
         $events = $query->latest()->get();
         $categories = Category::all(); 
         

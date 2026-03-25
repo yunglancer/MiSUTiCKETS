@@ -9,7 +9,7 @@ class Venue extends Model implements Auditable
 {
     use \OwenIt\Auditing\Auditable;
 
-    // Agregamos 'capacity' al fillable para permitir guardar el aforo total
+    // Agregamos 'capacity' al fillable para permitir guardar el aforo total del recinto
     protected $fillable = ['name', 'city', 'address', 'capacity'];
 
     /**
@@ -19,10 +19,10 @@ class Venue extends Model implements Auditable
     {
         return $this->hasMany(Event::class);
     }
-    
+
     /**
-     * Relación: Un recinto tiene muchas zonas físicas (VIP, Gradas, etc.)
-     * Esta es la relación clave para validar el aforo de Elías.
+     * Relación: Un recinto tiene muchas zonas físicas (VIP, General, Gradas, etc.)
+     * Esta es la relación clave para validar el aforo (Lógica de Elías).
      */
     public function zones()
     {

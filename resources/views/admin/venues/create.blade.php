@@ -73,7 +73,7 @@
 
                 {{-- Configuración de Zonas Dinámicas --}}
                 <div class="md:col-span-2 pt-4" x-data="{ 
-                    zones: [{ name: 'General', capacity: 0 }], 
+                    zones: {{ collect(old('zones', [['name' => 'General', 'capacity' => 0]]))->toJson() }}, 
                     addZone() { this.zones.push({ name: '', capacity: 0 }) }, 
                     removeZone(index) { this.zones.splice(index, 1) } 
                 }">

@@ -10,7 +10,7 @@ class VenueZone extends Model implements Auditable
 {
     use \OwenIt\Auditing\Auditable;
 
-    // Agregamos 'capacity' a la lista de campos permitidos
+    // Agregamos 'capacity' para permitir el registro del aforo físico por zona
     protected $fillable = [
         'venue_id', 
         'name', 
@@ -18,7 +18,7 @@ class VenueZone extends Model implements Auditable
     ];
 
     /**
-     * Relación inversa: Una zona pertenece a un Recinto
+     * Relación inversa: Una zona pertenece a un Recinto (Venue)
      */
     public function venue(): BelongsTo
     {
