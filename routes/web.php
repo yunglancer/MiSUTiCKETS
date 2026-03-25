@@ -22,7 +22,7 @@ Route::get('/vitrina', function () {
 // ==========================================
 Route::get('/', [StoreController::class, 'landing'])->name('home');
 
-// CAMBIO AQUÍ: Ahora apuntan a EventController para que el filtro funcione
+// Rutas de eventos para el público
 Route::get('/eventos', [EventController::class, 'list'])->name('events.index');
 Route::get('/eventos/{id}', [EventController::class, 'showPublic'])->name('events.show');
 
@@ -36,14 +36,23 @@ Route::middleware(['auth', 'role:SuperAdmin|Organizador|Validador'])->prefix('ad
 
     Route::resource('events', EventController::class);
 
+    // --- SECCIÓN DE VENUES (ORDENADA PARA EVITAR ERRORES) ---
     Route::get('venues', [VenueController::class, 'index'])->name('venues.index');
-    Route::get('venues/{venue}', [VenueController::class, 'show'])->name('venues.show');
-    Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
-    Route::get('venues/{venue}/zones-list', [VenueController::class, 'getZones'])->name('venues.zones');
-
+    
+    // Las rutas de creación deben ir ANTES de las que usan {venue}
     Route::middleware(['role:SuperAdmin'])->group(function () {
         Route::get('venues/create', [VenueController::class, 'create'])->name('venues.create');
         Route::post('venues', [VenueController::class, 'store'])->name('venues.store');
+    });
+
+    // Rutas con parámetros dinámicos (van después de las fijas)
+    Route::get('venues/{venue}', [VenueController::class, 'show'])->name('venues.show');
+    Route::get('venues/{venue}/zones-list', [VenueController::class, 'getZones'])->name('venues.zones');
+
+    Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
+
+    // Otras rutas protegidas para SuperAdmin
+    Route::middleware(['role:SuperAdmin'])->group(function () {
         Route::get('venues/{venue}/edit', [VenueController::class, 'edit'])->name('venues.edit');
         Route::put('venues/{venue}', [VenueController::class, 'update'])->name('venues.update');
         Route::delete('venues/{venue}', [VenueController::class, 'destroy'])->name('venues.destroy');
@@ -60,6 +69,7 @@ Route::middleware(['auth', 'role:SuperAdmin|Organizador|Validador'])->prefix('ad
         Route::get('/auditoria', [\App\Http\Controllers\AuditController::class, 'index'])->name('audits.index');
     });
 
+    // Rutas de Validación y Pagos
     Route::middleware(['role:SuperAdmin|Validador'])->group(function () {
         Route::get('/pagos/pendientes', [AdminController::class, 'pendingOrders'])->name('orders.pending');
         Route::post('/pagos/{order}/aprobar', [AdminController::class, 'approveOrder'])->name('orders.approve');
@@ -70,13 +80,15 @@ Route::middleware(['auth', 'role:SuperAdmin|Organizador|Validador'])->prefix('ad
     });
 });
 
+// ==========================================
+// 👤 3. RUTAS DE USUARIO AUTENTICADO
+// ==========================================
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
-
-Route::middleware(['auth'])->group(function () {
+    
+    // Panel del Cliente y Checkout
     Route::get('/mi-panel', [ClientController::class, 'dashboard'])->name('client.dashboard');
     Route::get('/mi-panel/ticket/{id}/descargar', [ClientController::class, 'downloadTicket'])->name('client.ticket.download');
     Route::get('/checkout/{event}', [CheckoutController::class, 'show'])->name('checkout.show');
@@ -84,6 +96,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
 });
 
+// ==========================================
+// 📄 4. PÁGINAS ESTATÍCAS E INFORMATIVAS
+// ==========================================
 Route::get('/preguntas-frecuentes', [\App\Http\Controllers\PageController::class, 'faq'])->name('pages.faq');
 Route::get('/contacto', [\App\Http\Controllers\PageController::class, 'contact'])->name('pages.contact');
 Route::post('/contacto', [\App\Http\Controllers\PageController::class, 'sendContact'])->name('pages.contact.send');
