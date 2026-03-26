@@ -172,11 +172,18 @@ class EventController extends Controller
 
         if ($request->has('zones')) {
             foreach ($request->zones as $zoneData) {
-                if (isset($zoneData['venue_zone_id'])) {
-                    $zonaReal = $venue->zones->where('id', $zoneData['venue_zone_id'])->first();
+                if (isset($zoneData['venue_zone_id']) && isset($zoneData['is_active']) && $zoneData['is_active'] == '1') {
+                    
+                    // 🛡️ SOLUCIÓN: Usamos == en vez de === para evitar problemas de tipos de datos (string vs int)
+                    $zonaReal = $venue->zones->firstWhere('id', '==', $zoneData['venue_zone_id']);
+                    
+                    // 🛡️ SOLUCIÓN: Si la zona no existe en la BD (quizás la borraron), saltamos esta iteración
+                    if (!$zonaReal) {
+                        continue; 
+                    }
+
                     $capacidadIngresada = (int)($zoneData['capacity'] ?? 0);
 
-                    // Validación por Zona
                     if ($capacidadIngresada > $zonaReal->capacity) {
                         return back()->withInput()->with('error', "Error en '{$zonaReal->name}': Estás intentando asignar {$capacidadIngresada} tickets pero el espacio físico solo permite {$zonaReal->capacity}.");
                     }
@@ -185,7 +192,6 @@ class EventController extends Controller
             }
         }
 
-        // Validación Global
         if ($totalTicketsUpdate > $venue->capacity) {
             return back()->withInput()->with('error', "El aforo total del evento ({$totalTicketsUpdate}) supera la capacidad máxima del recinto '{$venue->name}' ({$venue->capacity}).");
         }
@@ -204,19 +210,16 @@ class EventController extends Controller
                     'is_featured' => $request->has('is_featured'),
                 ];
 
-                // Manejo de Imagen Principal
                 if ($request->hasFile('image')) {
                     $upload = $cloudinary->uploadApi()->upload($request->file('image')->getRealPath(), ['folder' => 'misutickets_events']);
                     $data['image_path'] = $upload['secure_url'];
                 }
 
-                // Manejo de Banner (Hero) - REPARADO
                 if ($request->hasFile('hero_image')) {
                     $uploadHero = $cloudinary->uploadApi()->upload($request->file('hero_image')->getRealPath(), ['folder' => 'misutickets_events/heroes']);
                     $data['hero_path'] = $uploadHero['secure_url'];
                 }
 
-                // Manejo de Flyer - REPARADO
                 if ($request->hasFile('flyer_image')) {
                     $uploadFlyer = $cloudinary->uploadApi()->upload($request->file('flyer_image')->getRealPath(), ['folder' => 'misutickets_events/flyers']);
                     $data['flyer_path'] = $uploadFlyer['secure_url'];
@@ -227,12 +230,12 @@ class EventController extends Controller
                 if ($request->has('zones')) {
                     EventZone::where('event_id', $event->id)->delete();
                     foreach ($request->zones as $zoneData) {
-                        if (isset($zoneData['venue_zone_id']) && ($zoneData['capacity'] ?? 0) > 0) {
+                        if (isset($zoneData['venue_zone_id']) && isset($zoneData['is_active']) && $zoneData['is_active'] == '1' && ($zoneData['capacity'] ?? 0) > 0) {
                             EventZone::create([
                                 'event_id' => $event->id,
                                 'venue_zone_id' => $zoneData['venue_zone_id'],
-                                'price' => $zoneData['price'],
-                                'capacity' => $zoneData['capacity'],
+                                'price' => $zoneData['price'] ?? 0,
+                                'capacity' => $zoneData['capacity'] ?? 0,
                                 'is_active' => true,
                             ]);
                         }
@@ -245,7 +248,6 @@ class EventController extends Controller
             return back()->withInput()->with('error', 'Error al actualizar: ' . $e->getMessage());
         }
     }
-
     public function show(Event $event)
     {
         $user = auth()->user();
