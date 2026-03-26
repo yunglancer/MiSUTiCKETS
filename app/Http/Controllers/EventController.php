@@ -66,7 +66,6 @@ class EventController extends Controller
             'flyer_image' => 'nullable|image|max:10240',
         ]);
 
-        // --- LÓGICA DE ELÍAS: VALIDACIÓN DE AFORO ESTRICTA ---
         $venue = Venue::with('zones')->find($request->venue_id);
         $totalTicketsEvento = 0;
 
@@ -75,7 +74,6 @@ class EventController extends Controller
                 $zonaReal = $venue->zones->where('id', $zoneData['venue_zone_id'])->first();
                 $capacidadSolicitada = (int)$zoneData['capacity'];
 
-                // Validación 1: No exceder la capacidad física de la zona específica
                 if ($capacidadSolicitada > $zonaReal->capacity) {
                     return back()->withInput()->with('error', "Error en Zona '{$zonaReal->name}': La capacidad física es de {$zonaReal->capacity} personas. No puedes asignar {$capacidadSolicitada} tickets.");
                 }
@@ -84,7 +82,6 @@ class EventController extends Controller
             }
         }
 
-        // Validación 2: No exceder la capacidad total del recinto
         if ($totalTicketsEvento > $venue->capacity) {
             return back()->withInput()->with('error', "Error de Aforo Global: El recinto '{$venue->name}' tiene un límite total de {$venue->capacity} personas, pero la suma de tus zonas da {$totalTicketsEvento}.");
         }
@@ -170,13 +167,11 @@ class EventController extends Controller
             'flyer_image' => 'nullable|image|max:10240',
         ]);
 
-        // --- LÓGICA DE ELÍAS: VALIDACIÓN DE AFORO EN UPDATE ---
         $venue = Venue::with('zones')->find($request->venue_id);
         $totalTicketsUpdate = 0;
 
         if ($request->has('zones')) {
             foreach ($request->zones as $zoneData) {
-                // Verificamos si la zona está activa o se incluyó en el update
                 if (isset($zoneData['venue_zone_id'])) {
                     $zonaReal = $venue->zones->where('id', $zoneData['venue_zone_id'])->first();
                     $capacidadIngresada = (int)$zoneData['capacity'];
@@ -207,16 +202,19 @@ class EventController extends Controller
                     'is_featured' => $request->has('is_featured'),
                 ];
 
+                // Manejo de Imagen Principal
                 if ($request->hasFile('image')) {
                     $upload = $cloudinary->uploadApi()->upload($request->file('image')->getRealPath(), ['folder' => 'misutickets_events']);
                     $data['image_path'] = $upload['secure_url'];
                 }
 
+                // Manejo de Banner (Hero) - REPARADO
                 if ($request->hasFile('hero_image')) {
                     $uploadHero = $cloudinary->uploadApi()->upload($request->file('hero_image')->getRealPath(), ['folder' => 'misutickets_events/heroes']);
                     $data['hero_path'] = $uploadHero['secure_url'];
                 }
 
+                // Manejo de Flyer - REPARADO
                 if ($request->hasFile('flyer_image')) {
                     $uploadFlyer = $cloudinary->uploadApi()->upload($request->file('flyer_image')->getRealPath(), ['folder' => 'misutickets_events/flyers']);
                     $data['flyer_path'] = $uploadFlyer['secure_url'];
@@ -284,8 +282,6 @@ class EventController extends Controller
         $event->delete();
         return redirect()->route('admin.events.index')->with('success', 'Evento eliminado.');
     }
-
-    // --- FUNCIONES PÚBLICAS DE JEAN Y ELÍAS ---
 
     public function showPublic($id)
     {
