@@ -201,7 +201,6 @@ class CheckoutController extends Controller
             $decodedString = base64_decode($request->cart_items);
             $decodedArray = json_decode($decodedString, true);
 
-            // Aseguramos que SIEMPRE sea un arreglo y SIEMPRE tenga llaves numéricas (0, 1, 2...)
             $cartItems = [];
             if (is_array($decodedArray)) {
                 foreach ($decodedArray as $item) {
@@ -211,13 +210,12 @@ class CheckoutController extends Controller
                 }
             }
 
-            // Si el carrito está vacío, regresamos al primer paso
             if (empty($cartItems)) {
                 return redirect()->route('checkout.show', $request->event_id)
                                  ->with('error', 'Ocurrió un error al procesar tu carrito. Por favor, selecciona tus entradas de nuevo.');
             }
 
-            // 3. Recalculamos TODO lo que la vista pide
+            // 3. Recalculamos TODO
             $subtotal = 0;
             $totalTickets = 0;
             foreach ($cartItems as $item) {
@@ -231,7 +229,10 @@ class CheckoutController extends Controller
             $settingBcv = \App\Models\Setting::where('key', 'bcv_rate')->first();
             $bcvRate = $settingBcv ? (float) $settingBcv->value : 60.50;
 
-            // 🚀 PASAMOS TODAS LAS VARIABLES
+            // 🛡️ SOLUCIÓN: Flasheamos los datos manualmente para que los campos no se borren
+            $request->flash();
+
+            // 🚀 PASAMOS TODAS LAS VARIABLES (¡Y quitamos el withInput!)
             return view('client.summary', compact(
                 'event', 
                 'cartItems', 
@@ -240,7 +241,7 @@ class CheckoutController extends Controller
                 'grandTotal', 
                 'totalTickets', 
                 'bcvRate'
-            ))->withErrors($validator)->withInput();
+            ))->withErrors($validator);
         }
 
         // --- PROCESO DE GUARDADO ---
@@ -275,11 +276,19 @@ class CheckoutController extends Controller
             $subtotal = 0;
             $lockedZones = [];
 
-            foreach ($cartItems as $item) {
-                $zone = EventZone::where('id', $item['zone_id'])->lockForUpdate()->firstOrFail();
-                if ($zone->capacity < $item['quantity']) {
-                    throw new \Exception("Sin cupo en la zona {$item['name']}.");
+           foreach ($cartItems as $item) {
+                // Quitamos el firstOrFail() y usamos first()
+                $zone = EventZone::where('id', $item['zone_id'])->lockForUpdate()->first();
+                
+                // 🛡️ NUEVA VALIDACIÓN: Si la zona ya no existe (porque editaron el evento)
+                if (!$zone) {
+                    throw new \Exception("La zona '{$item['name']}' ya no está disponible o el evento fue actualizado. Por favor, selecciona tus entradas de nuevo.");
                 }
+
+                if ($zone->capacity < $item['quantity']) {
+                    throw new \Exception("Sin cupo en la zona {$item['name']}. Disponibles: {$zone->capacity}.");
+                }
+                
                 $subtotal += ($zone->price * $item['quantity']);
                 $lockedZones[] = ['model' => $zone, 'quantity' => $item['quantity'], 'zone_id' => $zone->id];
             }
