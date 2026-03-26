@@ -174,18 +174,20 @@ class EventController extends Controller
             foreach ($request->zones as $zoneData) {
                 if (isset($zoneData['venue_zone_id'])) {
                     $zonaReal = $venue->zones->where('id', $zoneData['venue_zone_id'])->first();
-                    $capacidadIngresada = (int)$zoneData['capacity'];
+                    $capacidadIngresada = (int)($zoneData['capacity'] ?? 0);
 
+                    // Validación por Zona
                     if ($capacidadIngresada > $zonaReal->capacity) {
-                        return back()->withInput()->with('error', "Error en '{$zonaReal->name}': Estás intentando asignar {$capacidadIngresada} pero el espacio físico solo permite {$zonaReal->capacity}.");
+                        return back()->withInput()->with('error', "Error en '{$zonaReal->name}': Estás intentando asignar {$capacidadIngresada} tickets pero el espacio físico solo permite {$zonaReal->capacity}.");
                     }
                     $totalTicketsUpdate += $capacidadIngresada;
                 }
             }
         }
 
+        // Validación Global
         if ($totalTicketsUpdate > $venue->capacity) {
-            return back()->withInput()->with('error', "El aforo total del evento ({$totalTicketsUpdate}) supera la capacidad máxima del recinto ({$venue->capacity}).");
+            return back()->withInput()->with('error', "El aforo total del evento ({$totalTicketsUpdate}) supera la capacidad máxima del recinto '{$venue->name}' ({$venue->capacity}).");
         }
 
         try {
@@ -240,7 +242,7 @@ class EventController extends Controller
                 return redirect()->route('admin.events.index')->with('success', '¡Evento actualizado correctamente!');
             });
         } catch (\Exception $e) {
-            return back()->with('error', 'Error al actualizar: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Error al actualizar: ' . $e->getMessage());
         }
     }
 
