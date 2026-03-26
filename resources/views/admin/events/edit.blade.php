@@ -14,10 +14,21 @@
         </a>
     </div>
 
-    {{-- Alertas de Error --}}
+    {{-- Alertas de Error por Defecto --}}
     @if ($errors->any())
         <div class="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-600 text-xs font-bold">
             <ul>@foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach</ul>
+        </div>
+    @endif
+
+    {{-- LÓGICA DE ELÍAS: ALERTA DE EXCESO DE AFORO --}}
+    @if(session('error'))
+        <div class="mb-6 p-4 bg-rose-600 border border-rose-700 rounded-2xl flex items-center gap-3 text-white shadow-lg animate-bounce">
+            <span class="material-icons">error_outline</span>
+            <div>
+                <p class="text-[10px] font-black uppercase tracking-widest leading-none mb-1">¡Atención Administrador!</p>
+                <p class="text-xs font-bold opacity-90">{{ session('error') }}</p>
+            </div>
         </div>
     @endif
 
@@ -104,7 +115,7 @@
                 </div>
             </div>
 
-            {{-- GESTIÓN DE MEDIOS (AQUÍ ESTÁN LOS CAMBIOS) --}}
+            {{-- GESTIÓN DE MEDIOS --}}
             <div class="bg-slate-50/50 border border-slate-100 rounded-[2.5rem] p-6 md:p-8 space-y-8">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-100">
@@ -127,7 +138,7 @@
                     <div class="space-y-3">
                         <label class="block text-[10px] font-black text-[#FF6600] uppercase tracking-widest ml-1">Banner Superior (Hero)</label>
                         <div class="relative w-full h-40 bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
-                            <img src="{{ $event->hero_image ?? 'https://placehold.co/800x400/1a1a1a/FFFFFF?text=Sin+Banner' }}" class="w-full h-full object-cover">
+                            <img src="{{ $event->hero_path ?? 'https://placehold.co/800x400/1a1a1a/FFFFFF?text=Sin+Banner' }}" class="w-full h-full object-cover">
                         </div>
                         <input type="file" name="hero_image" accept="image/*" class="block w-full text-[10px] text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-[#FF6600]/10 file:text-[#FF6600] hover:file:bg-[#FF6600]/20 cursor-pointer">
                     </div>
@@ -136,7 +147,7 @@
                     <div class="space-y-3">
                         <label class="block text-[10px] font-black text-[#FF6600] uppercase tracking-widest ml-1">Flyer Lateral (Vertical)</label>
                         <div class="relative w-full h-40 bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
-                            <img src="{{ $event->flyer_image ?? 'https://placehold.co/400x600/1a1a1a/FFFFFF?text=Sin+Flyer' }}" class="w-full h-full object-cover">
+                            <img src="{{ $event->flyer_path ?? 'https://placehold.co/400x600/1a1a1a/FFFFFF?text=Sin+Flyer' }}" class="w-full h-full object-cover">
                         </div>
                         <input type="file" name="flyer_image" accept="image/*" class="block w-full text-[10px] text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-[#FF6600]/10 file:text-[#FF6600] hover:file:bg-[#FF6600]/20 cursor-pointer">
                     </div>
