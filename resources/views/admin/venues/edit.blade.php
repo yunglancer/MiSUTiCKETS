@@ -16,6 +16,17 @@
         </div>
     </div>
 
+    {{-- BLOQUE DE ERROR DE AFORO --}}
+    @if(session('error'))
+        <div class="mb-6 p-4 bg-rose-600 border border-rose-700 rounded-2xl flex items-center gap-3 text-white shadow-lg">
+            <span class="material-icons">warning</span>
+            <div>
+                <p class="text-[10px] font-black uppercase tracking-widest leading-none mb-1">Error de Aforo</p>
+                <p class="text-xs font-bold opacity-90">{{ session('error') }}</p>
+            </div>
+        </div>
+    @endif
+
     {{-- Formulario de Edición --}}
     <form action="{{ route('admin.venues.update', $venue->id) }}" method="POST" class="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
         @csrf
@@ -40,7 +51,7 @@
                     @error('city') <p class="text-rose-500 text-[10px] font-bold mt-2 ml-1 uppercase">{{ $message }}</p> @enderror
                 </div>
 
-                {{-- Capacidad --}}
+                {{-- Capacidad Total --}}
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">Capacidad Total</label>
                     <div class="relative">
@@ -59,34 +70,51 @@
                     @error('address') <p class="text-rose-500 text-[10px] font-bold mt-2 ml-1 uppercase">{{ $message }}</p> @enderror
                 </div>
 
-                {{-- Zonas del Recinto --}}
+                {{-- Zonas del Recinto Dinámicas --}}
                 <div class="md:col-span-2 pt-4" x-data="{ 
-                    zones: {{ $venue->zones->count() > 0 ? $venue->zones->pluck('name') : "['General']" }}, 
-                    addZone() { this.zones.push('') }, 
+                    zones: {{ $venue->zones->count() > 0 
+                        ? json_encode($venue->zones->map(fn($z) => ['name' => $z->name, 'capacity' => $z->capacity])) 
+                        : "[{name: 'General', capacity: 0}]" }}, 
+                    addZone() { this.zones.push({name: '', capacity: 0}) }, 
                     removeZone(index) { this.zones.splice(index, 1) } 
                 }">
                     <div class="flex items-center justify-between mb-6">
                         <div>
                             <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">Zonas del Recinto</h3>
-                            <p class="text-slate-400 text-[9px] uppercase tracking-widest font-bold mt-0.5">Define las áreas disponibles para este lugar</p>
+                            <p class="text-slate-400 text-[9px] uppercase tracking-widest font-bold mt-0.5">Define las áreas y su capacidad física individual</p>
                         </div>
                         <button type="button" @click="addZone()" class="bg-slate-50 hover:bg-slate-100 text-slate-600 text-[10px] font-black py-2.5 px-4 rounded-xl uppercase tracking-widest transition-all flex items-center gap-2 border border-slate-100">
                             <span class="material-icons text-sm">add</span> Añadir Zona
                         </button>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="space-y-4">
                         <template x-for="(zone, index) in zones" :key="index">
-                            <div class="relative group animate-fade-in">
-                                <label class="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1" x-text="'Nombre de Zona ' + (index + 1)"></label>
-                                <div class="flex items-center gap-2">
-                                    <div class="relative flex-1">
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end animate-fade-in bg-slate-50/30 p-4 rounded-2xl border border-slate-50">
+                                {{-- Nombre de Zona --}}
+                                <div class="md:col-span-7">
+                                    <label class="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Nombre de la Zona</label>
+                                    <div class="relative">
                                         <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 text-base">label</span>
-                                        <input type="text" name="zones[]" x-model="zones[index]" placeholder="Ej: VIP, Platea Alta..." 
-                                            class="w-full bg-slate-50 border-none rounded-2xl pl-11 pr-4 py-3.5 text-xs font-bold text-slate-700 focus:ring-2 focus:ring-[#FF6600] transition-all" required>
+                                        <input type="text" :name="'zones['+index+'][name]'" x-model="zone.name" placeholder="Ej: VIP" 
+                                            class="w-full bg-white border-none rounded-xl pl-11 pr-4 py-3 text-xs font-bold text-slate-700 focus:ring-2 focus:ring-[#FF6600] transition-all" required>
                                     </div>
+                                </div>
+                                
+                                {{-- Capacidad de Zona --}}
+                                <div class="md:col-span-4">
+                                    <label class="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Capacidad Física</label>
+                                    <div class="relative">
+                                        <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 text-base">straighten</span>
+                                        <input type="number" :name="'zones['+index+'][capacity]'" x-model="zone.capacity" placeholder="0" 
+                                            class="w-full bg-white border-none rounded-xl pl-11 pr-4 py-3 text-xs font-bold text-slate-700 focus:ring-2 focus:ring-[#FF6600] transition-all" required>
+                                    </div>
+                                </div>
+
+                                {{-- Botón Eliminar --}}
+                                <div class="md:col-span-1">
                                     <button type="button" @click="removeZone(index)" x-show="zones.length > 1"
-                                        class="w-11 h-11 rounded-xl bg-slate-50 text-slate-400 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-all border border-slate-100 shadow-sm">
+                                        class="w-full h-[42px] rounded-xl bg-white text-slate-400 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-all border border-slate-100 shadow-sm">
                                         <span class="material-icons text-sm">delete</span>
                                     </button>
                                 </div>

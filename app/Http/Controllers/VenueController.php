@@ -44,10 +44,8 @@ class VenueController extends Controller
 
         try {
             return DB::transaction(function () use ($request) {
-                // 1. Crear el recinto
                 $venue = Venue::create($request->only(['name', 'city', 'address', 'capacity']));
 
-                // 2. Crear las zonas con su capacidad física
                 foreach ($request->zones as $zoneData) {
                     $venue->zones()->create([
                         'name'     => $zoneData['name'],
@@ -81,7 +79,7 @@ class VenueController extends Controller
             'zones.*.capacity' => 'required|integer|min:0',
         ]);
 
-        // --- VALIDACIÓN DE SUMA (Lógica de Elías) ---
+        // --- VALIDACIÓN DE SUMA (Lógica de Elías aplicada a edición) ---
         $sumaCapacidades = 0;
         foreach ($request->zones as $zoneData) {
             $sumaCapacidades += (int)$zoneData['capacity'];
@@ -89,7 +87,7 @@ class VenueController extends Controller
 
         if ($sumaCapacidades !== (int)$request->capacity) {
             return back()->withInput()->with('error', 
-                "Error: La suma de las zonas ($sumaCapacidades) no coincide con el total del recinto ({$request->capacity}).");
+                "Error de Aforo: La suma de las zonas ($sumaCapacidades) debe ser igual a la capacidad total ({$request->capacity}).");
         }
 
         try {
@@ -97,7 +95,7 @@ class VenueController extends Controller
                 // 1. Actualizamos datos básicos del recinto
                 $venue->update($request->only(['name', 'city', 'address', 'capacity']));
 
-                // 2. Sincronizamos zonas: Borramos las anteriores y creamos las nuevas con capacidad
+                // 2. Sincronizamos zonas: Borramos las anteriores y creamos las nuevas
                 $venue->zones()->delete(); 
 
                 foreach ($request->zones as $zoneData) {
@@ -108,7 +106,7 @@ class VenueController extends Controller
                 }
 
                 return redirect()->route('admin.venues.index')
-                    ->with('success', 'Recinto actualizado correctamente.');
+                    ->with('success', 'Recinto y zonas actualizados correctamente.');
             });
         } catch (\Exception $e) {
             return back()->withInput()->with('error', 'Error al actualizar: ' . $e->getMessage());
@@ -117,7 +115,6 @@ class VenueController extends Controller
 
     public function getZones(Venue $venue)
     {
-        // Esto es lo que Alpine.js lee para mostrar las filas de Precio/Capacidad en la creación de eventos
         return response()->json($venue->zones);
     }
 
