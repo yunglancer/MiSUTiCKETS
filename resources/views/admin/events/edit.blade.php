@@ -129,7 +129,7 @@
                     <div class="space-y-3">
                         <label class="block text-[10px] font-black text-slate-800 uppercase tracking-widest ml-1 italic">Imagen Principal (Card)</label>
                         <div class="relative w-full h-40 bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
-                            <img src="{{ $event->image_path ?? $event->image }}" class="w-full h-full object-cover">
+                            <img src="{{ $event->image_path ?? 'https://placehold.co/400x400?text=Sin+Imagen' }}" class="w-full h-full object-cover">
                         </div>
                         <input type="file" name="image" accept="image/*" class="block w-full text-[10px] text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300 cursor-pointer">
                     </div>
